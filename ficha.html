@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>criação de ficha, colisão RPG 1.0</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<!-- =====================================================================
+     ficha.html — ficha de um personagem
+       ficha.html?id=5                 abre a ficha 5
+       ficha.html?novo=1               personagem novo (isolado)
+       ficha.html?novo=1&campanha=2    personagem novo já na campanha 2
+     ===================================================================== -->
+<header class="topo">
+  <a class="marca" href="lobby.html">Colisão RPG</a>
+  <div class="quem"><a class="btn vazado pequeno" href="lobby.html">Voltar ao lobby</a><span id="quem"></span><button type="button" class="btn vazado pequeno" id="sair">Sair</button></div>
+</header>
+
+<main class="miolo estreito">
+  <p class="msg" id="geral" role="status"></p>
+
+  <div class="ficha" id="ficha" hidden>
+    <div class="titulo-ficha">
+      <h1>Sobrevivente</h1>
+      <div class="nivel"><label for="nv2" style="margin:0">Nível</label><input type="number" id="nv2" data-k="nivel" min="1" max="10"></div>
+    </div>
+
+    <div class="situacao">
+      <span>Jogador: <b id="donoNome"></b></span>
+      <span id="campTexto"></span>
+      <span id="campEscolha" hidden><label for="campSel" style="display:inline;margin:0 6px 0 0">Campanha</label><select id="campSel" style="width:auto"></select></span>
+    </div>
+
+    <section>
+      <div class="foto">
+        <div class="moldura" id="fotoBox">Sem foto</div>
+        <div>
+          <div class="acoes">
+            <button type="button" class="btn vazado pequeno" id="fotoEscolher">Escolher foto</button>
+            <button type="button" class="btn perigo pequeno" id="fotoRemover">Remover foto</button>
+          </div>
+          <input type="file" id="fotoFile" accept="image/jpeg,image/png,image/webp">
+          <p class="dica" id="fotoMsg">JPG, PNG ou WEBP, até 20 MB. A foto é enviada ao salvar.</p>
+        </div>
+      </div>
+      <div class="g g2">
+        <div><label for="per">Personagem</label><input type="text" id="per" data-k="personagem"></div>
+        <div><label for="niv">Nível</label><input type="number" id="niv" data-k="nivel" min="1" max="10"></div>
+      </div>
+      <div style="margin-top:12px"><label for="con">Conceito / Passado</label><textarea id="con" data-k="conceito" rows="3"></textarea></div>
+    </section>
+
+    <section>
+      <h2>1. Histórico e especialização geral</h2>
+      <p class="nota">Escolha 1.</p>
+      <label class="chk"><input type="checkbox" data-k="espOk"> Especialização escolhida</label>
+      <label for="esp" style="margin-top:8px">Especialização</label>
+      <input type="text" id="esp" data-k="esp">
+      <p class="dica">Efeito: +2 no resultado final do teste de 2D6 quando agir dentro do escopo do seu passado/profissão.</p>
+    </section>
+
+    <section>
+      <h2>2. Atributos base</h2>
+      <p class="nota">Escala de 1 a 10. Role 2D6 + Atributo. De 7 a 9: sucesso com custo. De 10 a 14: sucesso pleno. 15 ou mais: crítico.</p>
+      <div class="g g3">
+        <div class="attr"><b>Intelecto</b><em>Cognição, lógica, ciência</em><input type="number" min="1" max="10" id="int" data-k="int" aria-label="Intelecto"></div>
+        <div class="attr"><b>Vigor</b><em>Físico, saúde, força bruta</em><input type="number" min="1" max="10" id="vig" data-k="vig" aria-label="Vigor"></div>
+        <div class="attr"><b>Motricidade</b><em>Agilidade, precisão, mira</em><input type="number" min="1" max="10" id="mot" data-k="mot" aria-label="Motricidade"></div>
+      </div>
+      <div class="g g2" style="margin-top:14px">
+        <div class="attr"><b>Humanidade</b><em>Geno, tolerância, empatia</em>
+          <div class="barra" role="progressbar" aria-label="Humanidade" aria-valuemin="0" aria-valuemax="100" id="humBar"><i id="humFill"></i></div>
+          <div class="ctl"><button type="button" class="btn vazado pequeno" id="humDn">−5%</button><strong id="humVal">100%</strong><button type="button" class="btn vazado pequeno" id="humUp">+5%</button></div></div>
+        <div class="attr"><b>Fricção</b><em>Oposto da Humanidade, com controle próprio</em>
+          <div class="barra fric" role="progressbar" aria-label="Fricção" aria-valuemin="0" aria-valuemax="100" id="fricBar"><i id="fricFill"></i></div>
+          <div class="ctl"><button type="button" class="btn vazado pequeno" id="fricDn">−5%</button><strong id="fricVal">0%</strong><button type="button" class="btn vazado pequeno" id="fricUp">+5%</button></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Recursos de sobrevivência</h2>
+      <div class="g g2">
+        <div>
+          <label>PV – Pontos de Vida (atual / máximo)</label>
+          <div class="par"><input type="number" id="pv" data-k="pv" aria-label="PV atual"><span>/</span><input type="number" id="pvMax" readonly aria-label="PV máximo"></div>
+          <p class="dica">Máximo = 10 + (4 × Vigor)</p>
+        </div>
+        <div>
+          <label for="rd">RD – Redução de Dano total (armadura)</label>
+          <input type="number" id="rd" data-k="rd" min="0">
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Arsenal</h2>
+      <p class="nota">Ataques com 2D6 + Atributo. Escolha entre as suas armas pessoais e as armas da campanha. <a href="lobby.html#armas" class="so-tela">Criar arma nova</a></p>
+      <div id="armas"></div>
+      <div class="linha">
+        <h3>Proteção / Traje</h3>
+        <div class="g g3">
+          <div><label for="traje">Nome</label><input type="text" id="traje" data-k="traje"></div>
+          <div><label for="trajeRd">RD</label><input type="number" id="trajeRd" data-k="trajeRd" min="0"></div>
+          <div><label for="trajePen">Penalidade</label><input type="text" id="trajePen" data-k="trajePen"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Inventário e equipamentos de expedição</h2>
+      <div class="inv" id="inv"></div>
+    </section>
+
+    <section>
+      <h2>6. Anotações, infecções e traumas</h2>
+      <textarea data-k="notas" rows="8" aria-label="Anotações, infecções e traumas"></textarea>
+    </section>
+
+    <div class="barra-salvar">
+      <p class="msg" id="sMsg" role="status"></p>
+      <div class="acoes">
+        <button type="button" class="btn perigo" id="bExcluir" hidden>Excluir</button>
+        <button type="button" class="btn vazado" id="bImprimir">Imprimir / PDF</button>
+        <button type="button" class="btn" id="bSalvar">Salvar ficha</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="comum.js"></script>
+<script>
+(async function () {
+  const params = new URLSearchParams(location.search);
+  let id = params.get('id') ? +params.get('id') : null;
+
+  let ctx = null;
+  let S = {};                 // valores da ficha (preenchidos pelos campos data-k)
+  let dono = null;            // jogador_id do dono da ficha
+  let campanhaId = null;      // campanha da ficha (null = isolado)
+  let todasArmas = [];        // armas que eu vejo
+  let ligadas = new Set();    // armas já na ficha (ids)
+  let pendingFoto = null;     // arquivo escolhido, ainda não enviado
+  let sujo = false;           // há alterações não salvas?
+
+  ctx = await exigirLogin('#geral');
+  if (!ctx) return;
+  montarTopo(ctx);
+  const EU = ctx.eu.id;
+  const SLOTS = [['principal', 'Arma principal'], ['secundaria', 'Arma secundária']];
+
+  // ------------------------------------------------------------------
+  // Montar partes repetidas do formulário
+  // ------------------------------------------------------------------
+  SLOTS.forEach(([slot, titulo]) => {
+    $('#armas').append(el('div', { class: 'linha' },
+      el('h3', { text: titulo }),
+      el('label', { for: 'w-' + slot, text: 'Arma' }),
+      el('select', { id: 'w-' + slot, 'data-k': slot + 'Id' }),
+      el('p', { class: 'dica', id: 'd-' + slot, text: 'Nenhuma arma escolhida.' })));
+  });
+  for (let j = 1; j <= 14; j++) {
+    $('#inv').append(el('div', {},
+      el('input', { type: 'checkbox', 'data-k': 'i' + j + 'c', 'aria-label': 'Item ' + j + ' marcado' }),
+      el('input', { type: 'text', 'data-k': 'i' + j, 'aria-label': 'Item ' + j })));
+  }
+  const campos = $$('[data-k]');
+
+  // ------------------------------------------------------------------
+  // Ligação entre os campos e o objeto S
+  // ------------------------------------------------------------------
+  function aplicarEstado() {
+    campos.forEach(c => {
+      const v = S[c.dataset.k];
+      if (c.type === 'checkbox') c.checked = !!v;
+      else c.value = (v === undefined || v === null) ? '' : v;
+    });
+    calc(); barras(); preencherArmas();
+  }
+  document.addEventListener('input', ev => {
+    const c = ev.target, k = c.dataset && c.dataset.k;
+    if (!k) return;
+    S[k] = c.type === 'checkbox' ? c.checked : c.value;
+    if (k === 'nivel') {
+      let n = parseInt(c.value, 10);
+      if (n > 10) { n = 10; c.value = 10; } else if (n < 1) { n = 1; c.value = 1; }
+      S.nivel = c.value;
+      $$('[data-k="nivel"]').forEach(o => { if (o !== c) o.value = c.value; });
+    }
+    if (k.endsWith('Id')) mostrarResumoArmas();
+    sujo = true; calc();
+  });
+  // Os selects de arma disparam "change"
+  document.addEventListener('change', ev => {
+    const c = ev.target;
+    if (c.dataset && c.dataset.k && c.tagName === 'SELECT') { S[c.dataset.k] = c.value; sujo = true; mostrarResumoArmas(); }
+  });
+  window.addEventListener('beforeunload', ev => { if (sujo) { ev.preventDefault(); ev.returnValue = ''; } });
+
+  const intOr = (v, d, min, max) => { let n = parseInt(v, 10); if (isNaN(n)) n = d; if (min !== undefined) n = Math.max(min, n); if (max !== undefined) n = Math.min(max, n); return n; };
+  const txt = v => { v = (v == null ? '' : String(v)).trim(); return v === '' ? null : v; };
+
+  // PV máximo = 10 + 4 × Vigor
+  function calc() {
+    const vig = parseFloat($('#vig').value);
+    $('#pvMax').value = isNaN(vig) ? '' : 10 + 4 * vig;
+  }
+
+  // Humanidade (começa em 100%) e Fricção (começa em 0%): independentes, de 5 em 5%
+  function barras() {
+    let h = parseInt(S.hum, 10); if (isNaN(h)) h = 100;
+    h = Math.max(0, Math.min(100, Math.round(h / 5) * 5)); S.hum = h;
+    let f = parseInt(S.fric, 10); if (isNaN(f)) f = 0;
+    f = Math.max(0, Math.min(100, Math.round(f / 5) * 5)); S.fric = f;
+    $('#humFill').style.width = h + '%'; $('#fricFill').style.width = f + '%';
+    $('#humVal').textContent = h + '%'; $('#fricVal').textContent = f + '%';
+    $('#humBar').setAttribute('aria-valuenow', h); $('#fricBar').setAttribute('aria-valuenow', f);
+  }
+  const passo = (k, d, padrao) => { S[k] = (isNaN(parseInt(S[k], 10)) ? padrao : parseInt(S[k], 10)) + d; sujo = true; barras(); };
+  $('#humDn').onclick = () => passo('hum', -5, 100);
+  $('#humUp').onclick = () => passo('hum', 5, 100);
+  $('#fricDn').onclick = () => passo('fric', -5, 0);
+  $('#fricUp').onclick = () => passo('fric', 5, 0);
+  $('#bImprimir').onclick = () => window.print();
+
+  // ------------------------------------------------------------------
+  // Armas: pessoais do dono + da campanha da ficha (+ as que já estão nela)
+  // ------------------------------------------------------------------
+  function armasPermitidas() {
+    return todasArmas.filter(a =>
+      (a.campanha_id === null && a.jogador_id === dono) ||
+      (campanhaId && a.campanha_id === campanhaId) ||
+      ligadas.has(a.id));
+  }
+  const armaPorId = idA => todasArmas.find(a => String(a.id) === String(idA)) || null;
+  function resumo(a) {
+    if (!a) return 'Nenhuma arma escolhida.';
+    return [a.dano && 'Dano ' + a.dano, a.alcance && 'Alcance ' + a.alcance,
+      a.atributo && 'Atributo ' + ATRIBUTOS[a.atributo], a.efeito && 'Efeito: ' + a.efeito]
+      .filter(Boolean).join('. ') || 'Sem detalhes cadastrados.';
+  }
+  function preencherArmas() {
+    const lista = armasPermitidas();
+    const pessoais = lista.filter(a => a.campanha_id === null);
+    const daCampanha = lista.filter(a => a.campanha_id !== null);
+    SLOTS.forEach(([slot]) => {
+      const sel = $('#w-' + slot), quero = S[slot + 'Id'];
+      sel.textContent = '';
+      sel.append(el('option', { value: '', text: 'Nenhuma' }));
+      if (pessoais.length) sel.append(el('optgroup', { label: 'Armas pessoais' }, pessoais.map(a => el('option', { value: a.id, text: a.nome }))));
+      if (daCampanha.length) sel.append(el('optgroup', { label: 'Armas da campanha' }, daCampanha.map(a => el('option', { value: a.id, text: a.nome }))));
+      sel.value = quero && armaPorId(quero) && lista.includes(armaPorId(quero)) ? String(quero) : '';
+      if (!sel.value) S[slot + 'Id'] = '';
+    });
+    mostrarResumoArmas();
+  }
+  function mostrarResumoArmas() {
+    SLOTS.forEach(([slot]) => { $('#d-' + slot).textContent = resumo(armaPorId($('#w-' + slot).value)); });
+  }
+
+  // ------------------------------------------------------------------
+  // Foto
+  // ------------------------------------------------------------------
+  function mostrarFoto(src) {
+    const box = $('#fotoBox'); box.textContent = '';
+    if (!src) { box.textContent = 'Sem foto'; return; }
+    box.append(el('img', { src, alt: 'Foto do personagem' }));
+  }
+  $('#fotoEscolher').onclick = () => $('#fotoFile').click();
+  $('#fotoFile').onchange = function () {
+    const file = this.files && this.files[0]; if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { aviso('#fotoMsg', 'Formato não aceito. Use JPG, PNG ou WEBP.', 'ruim'); return; }
+    if (file.size > FOTO_MAX) { aviso('#fotoMsg', 'Imagem grande demais (' + (file.size / 1048576).toFixed(1) + ' MB). O limite é 20 MB.', 'ruim'); return; }
+    pendingFoto = file; sujo = true;
+    const fr = new FileReader(); fr.onload = () => mostrarFoto(fr.result); fr.readAsDataURL(file);
+    aviso('#fotoMsg', 'Foto escolhida. Ela é enviada ao salvar.');
+  };
+  $('#fotoRemover').onclick = () => {
+    pendingFoto = null; S.foto = null; $('#fotoFile').value = ''; mostrarFoto(null); sujo = true;
+    aviso('#fotoMsg', 'Foto removida. Salve para confirmar.');
+  };
+  async function enviarFoto() {
+    if (!pendingFoto) return S.foto || null;
+    const ext = pendingFoto.type === 'image/png' ? 'png' : pendingFoto.type === 'image/webp' ? 'webp' : 'jpg';
+    const nome = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+    const up = await sb.storage.from(BUCKET).upload(nome, pendingFoto, { contentType: pendingFoto.type, upsert: false });
+    if (up.error) throw up.error;
+    return sb.storage.from(BUCKET).getPublicUrl(nome).data.publicUrl;
+  }
+
+  // ------------------------------------------------------------------
+  // Situação (dono e campanha)
+  // ------------------------------------------------------------------
+  function mostrarSituacao(campanhas) {
+    const camp = campanhas.find(c => c.id === campanhaId);
+    $('#donoNome').textContent = dono === EU ? ctx.eu.nome + ' (você)' : (S.jogador || 'outro jogador');
+    if (!id) {
+      // personagem novo: escolhe a campanha (só as que jogo)
+      const opcoes = campanhas.filter(c => c.souJogador);
+      const sel = $('#campSel');
+      sel.textContent = '';
+      sel.append(el('option', { value: '', text: 'Nenhuma (personagem isolado)' }));
+      opcoes.forEach(c => sel.append(el('option', { value: c.id, text: c.nome })));
+      sel.value = campanhaId && opcoes.some(c => c.id === campanhaId) ? campanhaId : '';
+      campanhaId = sel.value ? +sel.value : null;
+      sel.onchange = () => { campanhaId = sel.value ? +sel.value : null; sujo = true; preencherArmas(); };
+      $('#campEscolha').hidden = false;
+      $('#campTexto').textContent = '';
+    } else {
+      $('#campEscolha').hidden = true;
+      $('#campTexto').textContent = '';
+      $('#campTexto').append('Campanha: ', el('b', { text: camp ? camp.nome : (campanhaId ? 'campanha' : 'nenhuma (isolado)') }));
+      if (dono !== EU) $('#campTexto').append(el('span', { class: 'etiqueta mestre', style: 'margin-left:8px', text: 'Você está vendo como mestre' }));
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Carregar
+  // ------------------------------------------------------------------
+  async function carregar() {
+    // campanhas que vejo e em quais sou jogador
+    const c = await sb.from('campanhas').select('id,nome,mestre_id').order('nome');
+    if (c.error) throw c.error;
+    const cj = await sb.from('campanha_jogadores').select('campanha_id').eq('jogador_id', EU);
+    if (cj.error) throw cj.error;
+    const joga = new Set(cj.data.map(x => x.campanha_id));
+    const campanhas = c.data.map(x => Object.assign(x, { souJogador: joga.has(x.id) }));
+
+    const a = await sb.from('armas').select('*').order('nome');
+    if (a.error) throw a.error;
+    todasArmas = a.data;
+
+    if (id) {
+      const p = await sb.from('personagens').select('*').eq('id', id).maybeSingle();
+      if (p.error) throw p.error;
+      if (!p.data) { aviso('#geral', 'Ficha não encontrada, ou você não tem acesso a ela.', 'ruim'); return false; }
+      const w = await sb.from('personagem_armas').select('*').eq('personagem_id', id);
+      if (w.error) throw w.error;
+      const i = await sb.from('inventario').select('*').eq('personagem_id', id);
+      if (i.error) throw i.error;
+      const d = p.data;
+      dono = d.jogador_id; campanhaId = d.campanha_id;
+      let nomeDono = null;
+      if (dono !== EU) {
+        const j = await sb.from('jogadores').select('nome').eq('id', dono).maybeSingle();
+        nomeDono = j.data && j.data.nome;
+      }
+      S = {
+        jogador: nomeDono, personagem: d.nome, conceito: d.conceito || '',
+        esp: d.especializacao || '', espOk: !!d.especializacao,
+        nivel: d.nivel, hum: d.humanidade, fric: d.friccao,
+        int: d.intelecto, vig: d.vigor, mot: d.motricidade,
+        pv: d.pv_atual, rd: d.rd,
+        traje: d.traje_nome || '', trajeRd: d.traje_rd, trajePen: d.traje_penalidade || '',
+        notas: d.notas || '', foto: d.foto_url || null
+      };
+      ligadas = new Set(w.data.map(x => x.arma_id));
+      w.data.forEach(x => { S[x.slot + 'Id'] = String(x.arma_id); });
+      i.data.forEach(x => { S['i' + x.posicao] = x.item; S['i' + x.posicao + 'c'] = !!x.marcado; });
+      $('#bExcluir').hidden = false;
+      document.title = d.nome + ' — Colisão RPG';
+    } else {
+      dono = EU;
+      const pedida = params.get('campanha') ? +params.get('campanha') : null;
+      campanhaId = pedida && joga.has(pedida) ? pedida : null;
+      S = { nivel: 1, int: 1, vig: 1, mot: 1, hum: 100, fric: 0, rd: 0, trajeRd: 0, pv: 14 };
+      document.title = 'Novo personagem — Colisão RPG';
+    }
+    mostrarSituacao(campanhas);
+    aplicarEstado();
+    mostrarFoto(S.foto || null);
+    $('#ficha').hidden = false;
+    sujo = false;
+    return true;
+  }
+
+  // ------------------------------------------------------------------
+  // Salvar
+  // ------------------------------------------------------------------
+  function linhaPersonagem() {
+    const vig = intOr(S.vig, 1, 1, 10), pvMax = 10 + 4 * vig;
+    return {
+      nome: (S.personagem || '').trim(),
+      conceito: txt(S.conceito),
+      especializacao: txt(S.esp),
+      nivel: intOr(S.nivel, 1, 1, 10),
+      humanidade: Math.max(0, Math.min(100, Math.round(intOr(S.hum, 100) / 5) * 5)),
+      friccao: Math.max(0, Math.min(100, Math.round(intOr(S.fric, 0) / 5) * 5)),
+      intelecto: intOr(S.int, 1, 1, 10),
+      vigor: vig,
+      motricidade: intOr(S.mot, 1, 1, 10),
+      pv_atual: intOr(S.pv, pvMax, 0, pvMax),
+      rd: intOr(S.rd, 0, 0),
+      traje_nome: txt(S.traje),
+      traje_rd: intOr(S.trajeRd, 0, 0),
+      traje_penalidade: txt(S.trajePen),
+      notas: txt(S.notas)
+    };
+  }
+
+  async function salvar() {
+    const linha = linhaPersonagem();
+    if (!linha.nome) { aviso('#sMsg', 'Preencha o nome do personagem antes de salvar.', 'ruim'); $('#per').focus(); return; }
+    const botao = $('#bSalvar'); botao.disabled = true; aviso('#sMsg', 'Salvando...');
+    let subiu = null, gravou = false;
+    try {
+      let fotoAntiga = null;
+      if (id) {
+        const q = await sb.from('personagens').select('foto_url').eq('id', id).single();
+        fotoAntiga = (q.data && q.data.foto_url) || null;
+      }
+      const trocouFoto = !!pendingFoto;
+      const url = await enviarFoto();
+      if (trocouFoto) subiu = caminhoDaFoto(url);
+      linha.foto_url = url;
+
+      let r;
+      if (id) {
+        r = await sb.from('personagens').update(linha).eq('id', id).select('id').single();
+      } else {
+        // dono e campanha só são definidos ao criar; depois, mudar de campanha é pelo lobby
+        r = await sb.from('personagens').insert(Object.assign({ jogador_id: dono, campanha_id: campanhaId }, linha)).select('id').single();
+      }
+      if (r.error) throw r.error;
+      const novo = !id;
+      id = r.data.id; gravou = true;
+
+      // armas: principal e secundária
+      for (const [slot] of SLOTS) {
+        const aid = S[slot + 'Id'];
+        if (aid && armaPorId(aid)) {
+          const a = await sb.from('personagem_armas').upsert({ personagem_id: id, slot, arma_id: +aid }, { onConflict: 'personagem_id,slot' });
+          if (a.error) throw a.error;
+        } else {
+          const d = await sb.from('personagem_armas').delete().eq('personagem_id', id).eq('slot', slot);
+          if (d.error) throw d.error;
+        }
+      }
+      // inventário: uma linha por espaço preenchido (1 a 14)
+      const itens = [], vazios = [];
+      for (let j = 1; j <= 14; j++) {
+        const nome = (S['i' + j] || '').trim();
+        if (nome) itens.push({ personagem_id: id, posicao: j, item: nome, marcado: !!S['i' + j + 'c'] });
+        else vazios.push(j);
+      }
+      if (itens.length) { const u = await sb.from('inventario').upsert(itens, { onConflict: 'personagem_id,posicao' }); if (u.error) throw u.error; }
+      if (vazios.length) { const x = await sb.from('inventario').delete().eq('personagem_id', id).in('posicao', vazios); if (x.error) throw x.error; }
+
+      // a foto antiga só é apagada depois que o banco já aponta para a nova
+      if (fotoAntiga && fotoAntiga !== url) await apagarFotoSeSobrou(fotoAntiga, id);
+      S.foto = url; pendingFoto = null; $('#fotoFile').value = ''; mostrarFoto(url);
+      aviso('#fotoMsg', url ? 'Foto salva.' : 'Sem foto.');
+      ligadas = new Set(SLOTS.map(([s]) => +S[s + 'Id']).filter(Boolean));
+      sujo = false;
+
+      if (novo) {
+        // a partir de agora o endereço aponta para esta ficha
+        history.replaceState(null, '', 'ficha.html?id=' + id);
+        $('#bExcluir').hidden = false;
+        const c = await sb.from('campanhas').select('id,nome,mestre_id');
+        mostrarSituacao((c.data || []).map(x => Object.assign(x, { souJogador: true })));
+      }
+      document.title = linha.nome + ' — Colisão RPG';
+      aviso('#sMsg', 'Ficha de ' + linha.nome + ' salva.', 'bom');
+    } catch (e) {
+      if (subiu && !gravou) { try { await sb.storage.from(BUCKET).remove([subiu]); } catch (x) {} }
+      aviso('#sMsg', erroMsg(e), 'ruim');
+    } finally {
+      botao.disabled = false;
+    }
+  }
+  $('#bSalvar').onclick = salvar;
+
+  // ------------------------------------------------------------------
+  // Excluir
+  // ------------------------------------------------------------------
+  $('#bExcluir').onclick = async () => {
+    if (!id) return;
+    const nome = S.personagem || 'este personagem';
+    if (!confirm('Excluir ' + nome + '? A ficha, o inventário e a foto serão apagados. Isso não pode ser desfeito.')) return;
+    const r = await sb.from('personagens').delete().eq('id', id);
+    if (r.error) { aviso('#sMsg', erroMsg(r.error), 'ruim'); return; }
+    if (S.foto) await apagarFotoSeSobrou(S.foto, id);
+    sujo = false;
+    location.replace('lobby.html');
+  };
+
+  // ------------------------------------------------------------------
+  try { await carregar(); }
+  catch (e) { aviso('#geral', erroMsg(e), 'ruim'); }
+})();
+</script>
+</body>
+</html>

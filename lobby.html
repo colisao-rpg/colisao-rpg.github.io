@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Colisão RPG — Lobby</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<!-- =====================================================================
+     lobby.html — página principal depois do login
+     Abas:
+       Personagens: os personagens da conta (isolados ou em campanha),
+                    criar novo, levar para uma campanha, tirar dela
+       Campanhas:   criar campanha (vira mestre), entrar com código,
+                    ver quem está em cada uma
+       Armas:       criar e editar armas pessoais ou da campanha
+     ===================================================================== -->
+<header class="topo">
+  <a class="marca" href="lobby.html">Colisão RPG</a>
+  <div class="quem"><span id="quem"></span><button type="button" class="btn vazado pequeno" id="sair">Sair</button></div>
+</header>
+
+<main class="miolo">
+  <p class="msg" id="geral" role="status"></p>
+
+  <nav class="abas" role="tablist" aria-label="Seções do lobby">
+    <button role="tab" id="t-personagens" aria-controls="aba-personagens" aria-selected="true">Personagens</button>
+    <button role="tab" id="t-campanhas" aria-controls="aba-campanhas" aria-selected="false">Campanhas</button>
+    <button role="tab" id="t-armas" aria-controls="aba-armas" aria-selected="false">Armas</button>
+  </nav>
+
+  <!-- ================= PERSONAGENS ================= -->
+  <section id="aba-personagens" role="tabpanel" aria-labelledby="t-personagens">
+    <div class="cabeca">
+      <h1>Seus personagens</h1>
+      <a class="btn" href="ficha.html?novo=1">Criar personagem</a>
+    </div>
+    <p class="msg" id="pMsg" role="status"></p>
+    <div class="dossies" id="listaPersonagens"></div>
+  </section>
+
+  <!-- ================= CAMPANHAS ================= -->
+  <section id="aba-campanhas" role="tabpanel" aria-labelledby="t-campanhas" hidden>
+    <div class="cabeca"><h1>Campanhas</h1></div>
+    <div class="colunas">
+      <form class="bloco" id="fEntrar">
+        <h2>Entrar numa campanha</h2>
+        <p class="nota">Peça o código de convite ao mestre da campanha.</p>
+        <div class="campo"><label for="eCodigo">Código de convite</label><input type="text" id="eCodigo" autocomplete="off" maxlength="12" placeholder="Ex.: A1B2C3" required></div>
+        <button type="submit" class="btn">Entrar na campanha</button>
+      </form>
+      <form class="bloco" id="fCriarCamp">
+        <h2>Criar campanha</h2>
+        <p class="nota">Você vira o mestre e recebe um código para convidar os jogadores.</p>
+        <div class="campo"><label for="cNome">Nome</label><input type="text" id="cNome" required></div>
+        <div class="campo"><label for="cDesc">Descrição (opcional)</label><input type="text" id="cDesc"></div>
+        <button type="submit" class="btn vazado">Criar campanha</button>
+      </form>
+    </div>
+    <p class="msg" id="cMsg" role="status"></p>
+    <div id="listaCampanhas"></div>
+  </section>
+
+  <!-- ================= ARMAS ================= -->
+  <section id="aba-armas" role="tabpanel" aria-labelledby="t-armas" hidden>
+    <div class="cabeca"><h1>Armas</h1></div>
+    <div class="armas-layout">
+      <form class="bloco" id="fArma">
+        <h2 id="aTitulo">Nova arma</h2>
+        <p class="dica-rolagem">Ataque: 2D6 + o atributo da arma. De 7 a 9 acerta com custo, de 10 a 14 acerta, 15 ou mais é crítico.</p>
+        <div class="campo"><label for="aNome">Nome</label><input type="text" id="aNome" required></div>
+        <div class="g g2">
+          <div class="campo"><label for="aDano">Dano</label>
+            <input type="text" id="aDano" list="dados" placeholder="Ex.: 1d6">
+            <datalist id="dados"><option value="1d4"><option value="1d6"><option value="1d8"><option value="1d10"><option value="1d12"><option value="2d6"><option value="2d8"><option value="3d6"></datalist>
+          </div>
+          <div class="campo"><label for="aAlcance">Alcance</label>
+            <select id="aAlcance">
+              <option value="">Não definido</option>
+              <option>Corpo a corpo</option><option>Curto</option><option>Médio</option><option>Longo</option><option>Extremo</option>
+            </select>
+          </div>
+        </div>
+        <div class="campo"><label>Atributo do ataque</label>
+          <div class="radios">
+            <label><input type="radio" name="aAtr" value="MOT"> MOT <small>mira e precisão</small></label>
+            <label><input type="radio" name="aAtr" value="VIG"> VIG <small>força bruta</small></label>
+            <label><input type="radio" name="aAtr" value="INT"> INT <small>ciência e tecnologia</small></label>
+          </div>
+        </div>
+        <div class="campo"><label for="aEfeito">Efeito</label><textarea id="aEfeito" rows="3" placeholder="Ex.: ignora 1 de RD; sangramento em crítico"></textarea></div>
+        <div class="campo"><label for="aOnde">Guardar em</label><select id="aOnde"></select>
+          <p class="dica">Armas pessoais só você vê. Armas da campanha ficam disponíveis para todos os personagens dela.</p></div>
+        <div class="acoes">
+          <button type="submit" class="btn" id="aSalvar">Criar arma</button>
+          <button type="button" class="btn vazado" id="aNova">Limpar</button>
+          <button type="button" class="btn perigo" id="aExcluir" hidden>Excluir arma</button>
+        </div>
+        <p class="msg" id="aMsg" role="status"></p>
+      </form>
+      <div id="listaArmas"></div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="comum.js"></script>
+<script>
+(async function () {
+  // ------------------------------------------------------------------
+  // Estado da página
+  // ------------------------------------------------------------------
+  let ctx = null;            // { user, eu } de quem entrou
+  let campanhas = [];        // campanhas que eu vejo (jogo nelas ou sou mestre)
+  let souJogadorEm = new Set();  // ids das campanhas em que sou JOGADOR
+  let membros = new Map();   // campanha_id -> [jogador_id]
+  let nomes = new Map();     // jogador_id -> nome
+  let armas = [];            // armas que eu vejo
+  let armaAberta = null;     // arma carregada no formulário
+
+  ctx = await exigirLogin('#geral');
+  if (!ctx) return;
+  montarTopo(ctx);
+  const EU = ctx.eu.id;
+
+  // ------------------------------------------------------------------
+  // Abas (o endereço guarda a aba: lobby.html#armas)
+  // ------------------------------------------------------------------
+  const ABAS = ['personagens', 'campanhas', 'armas'];
+  function mostrarAba(nome) {
+    if (!ABAS.includes(nome)) nome = 'personagens';
+    ABAS.forEach(a => {
+      $('#aba-' + a).hidden = a !== nome;
+      $('#t-' + a).setAttribute('aria-selected', a === nome ? 'true' : 'false');
+    });
+  }
+  ABAS.forEach(a => $('#t-' + a).addEventListener('click', () => {
+    mostrarAba(a);
+    try { history.replaceState(null, '', '#' + a); } catch (e) { location.hash = a; }
+  }));
+  window.addEventListener('hashchange', () => mostrarAba(location.hash.slice(1)));
+  mostrarAba(location.hash.slice(1));
+
+  const nomeCampanha = id => (campanhas.find(c => c.id === id) || {}).nome || 'Campanha';
+  const souMestre = c => c.mestre_id === EU;
+
+  // ------------------------------------------------------------------
+  // Carregar dados básicos
+  // ------------------------------------------------------------------
+  async function carregarBase() {
+    const c = await sb.from('campanhas').select('id,nome,descricao,mestre_id,codigo').order('nome');
+    if (c.error) throw c.error;
+    campanhas = c.data;
+    const cj = await sb.from('campanha_jogadores').select('campanha_id,jogador_id');
+    if (cj.error) throw cj.error;
+    souJogadorEm = new Set(cj.data.filter(x => x.jogador_id === EU).map(x => x.campanha_id));
+    membros = new Map();
+    cj.data.forEach(x => { if (!membros.has(x.campanha_id)) membros.set(x.campanha_id, []); membros.get(x.campanha_id).push(x.jogador_id); });
+    const j = await sb.from('jogadores').select('id,nome');
+    if (j.error) throw j.error;
+    nomes = new Map(j.data.map(x => [x.id, x.nome]));
+  }
+
+  async function recarregar() {
+    try {
+      await carregarBase();
+      await Promise.all([desenharPersonagens(), desenharCampanhas(), carregarArmas()]);
+    } catch (e) { aviso('#geral', erroMsg(e), 'ruim'); }
+  }
+
+  // ==================================================================
+  // PERSONAGENS
+  // ==================================================================
+  async function desenharPersonagens() {
+    const r = await sb.from('personagens')
+      .select('id,nome,nivel,especializacao,campanha_id,foto_url,humanidade,friccao,pv_atual,pv_max')
+      .eq('jogador_id', EU).order('criado_em', { ascending: false });
+    if (r.error) throw r.error;
+    const lista = $('#listaPersonagens');
+    lista.textContent = '';
+    if (!r.data.length) {
+      lista.append(el('div', { class: 'vazio' },
+        el('p', { text: 'Você ainda não tem personagens. Crie o primeiro: ele pode ficar isolado ou entrar numa campanha depois.' }),
+        el('a', { class: 'btn', href: 'ficha.html?novo=1', text: 'Criar personagem' })));
+      return;
+    }
+    r.data.forEach(p => lista.append(cartaoPersonagem(p)));
+  }
+
+  function medidor(classe, rotulo, valor, max, texto) {
+    const pct = max ? Math.max(0, Math.min(100, Math.round(valor / max * 100))) : 0;
+    const trilho = el('div', { class: 'trilho' }, el('i'));
+    trilho.firstChild.style.width = pct + '%';
+    return el('div', { class: 'medidor ' + classe }, el('span', { text: rotulo }), trilho, el('span', { text: texto }));
+  }
+
+  function cartaoPersonagem(p) {
+    const retrato = el('div', { class: 'retrato' });
+    if (p.foto_url) retrato.append(el('img', { src: p.foto_url, alt: 'Foto de ' + p.nome }));
+    else retrato.textContent = iniciais(p.nome);
+
+    const etiqueta = p.campanha_id
+      ? el('span', { class: 'etiqueta jogador', text: nomeCampanha(p.campanha_id) })
+      : el('span', { class: 'etiqueta isolado', text: 'Isolado' });
+
+    const corpo = el('div', {},
+      el('h3', { text: p.nome }),
+      el('p', { class: 'sub', text: 'Nível ' + p.nivel + (p.especializacao ? ', ' + p.especializacao : '') }),
+      etiqueta,
+      el('div', { class: 'medidores' },
+        medidor('pv', 'PV', p.pv_atual, p.pv_max, p.pv_atual + '/' + p.pv_max),
+        medidor('', 'Humanidade', p.humanidade, 100, p.humanidade + '%'),
+        medidor('fric', 'Fricção', p.friccao, 100, p.friccao + '%')));
+
+    const rodape = el('div', { class: 'rodape' });
+
+    // Levar para uma campanha (isolado) ou tirar da campanha
+    if (!p.campanha_id) {
+      const opcoes = campanhas.filter(c => souJogadorEm.has(c.id));
+      if (opcoes.length) {
+        const sel = el('select', { 'aria-label': 'Campanha para levar ' + p.nome },
+          opcoes.map(c => el('option', { value: c.id, text: c.nome })));
+        rodape.append(el('div', { class: 'levar' }, sel,
+          el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Levar para a campanha',
+            onclick: () => moverPersonagem(p, +sel.value) })));
+      } else {
+        rodape.append(el('p', { class: 'nota', style: 'margin:0',
+          text: 'Para levar este personagem a uma campanha, entre numa pela aba Campanhas.' }));
+      }
+    }
+
+    const acoes = el('div', { class: 'acoes' },
+      el('a', { class: 'btn pequeno', href: 'ficha.html?id=' + p.id, text: 'Abrir ficha' }),
+      p.campanha_id ? el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Tirar da campanha',
+        onclick: () => moverPersonagem(p, null) }) : null,
+      el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Excluir',
+        onclick: () => excluirPersonagem(p) }));
+    rodape.append(acoes);
+
+    return el('article', { class: 'dossie' }, retrato, corpo, rodape);
+  }
+
+  async function moverPersonagem(p, campanhaId) {
+    if (campanhaId === null && !confirm('Tirar ' + p.nome + ' da campanha? As armas da campanha saem da ficha; as armas pessoais ficam.')) return;
+    const r = await sb.rpc('mover_personagem', { p_personagem: p.id, p_campanha: campanhaId });
+    if (r.error) { aviso('#pMsg', erroMsg(r.error), 'ruim'); return; }
+    aviso('#pMsg', campanhaId ? p.nome + ' agora está em ' + nomeCampanha(campanhaId) + '.' : p.nome + ' agora não está em nenhuma campanha.', 'bom');
+    await recarregar();
+  }
+
+  async function excluirPersonagem(p) {
+    if (!confirm('Excluir ' + p.nome + '? A ficha, o inventário e a foto serão apagados. Isso não pode ser desfeito.')) return;
+    const r = await sb.from('personagens').delete().eq('id', p.id);
+    if (r.error) { aviso('#pMsg', erroMsg(r.error), 'ruim'); return; }
+    if (p.foto_url) await apagarFotoSeSobrou(p.foto_url, p.id);
+    aviso('#pMsg', p.nome + ' foi excluído.', 'bom');
+    await recarregar();
+  }
+
+  // ==================================================================
+  // CAMPANHAS
+  // ==================================================================
+  async function desenharCampanhas() {
+    const lista = $('#listaCampanhas');
+    lista.textContent = '';
+    if (!campanhas.length) {
+      lista.append(el('div', { class: 'vazio' },
+        el('p', { text: 'Você ainda não está em nenhuma campanha. Entre com o código que o mestre te passar ou crie a sua.' })));
+      return;
+    }
+    // mestre primeiro
+    const ordem = campanhas.slice().sort((a, b) => (souMestre(b) - souMestre(a)) || a.nome.localeCompare(b.nome));
+    for (const c of ordem) lista.append(await cartaoCampanha(c));
+  }
+
+  async function cartaoCampanha(c) {
+    const mestre = souMestre(c), jogador = souJogadorEm.has(c.id);
+    const etiquetas = el('div', { class: 'acoes' },
+      mestre ? el('span', { class: 'etiqueta mestre', text: 'Você é o mestre' }) : null,
+      jogador ? el('span', { class: 'etiqueta jogador', text: 'Você joga' }) : null);
+
+    const card = el('article', { class: 'campanha' + (mestre ? ' sou-mestre' : '') },
+      el('header', {}, el('div', {}, el('h3', { text: c.nome }),
+        c.descricao ? el('p', { class: 'nota', style: 'margin:4px 0 0', text: c.descricao }) : null), etiquetas));
+
+    if (mestre) {
+      const botao = el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Copiar código' });
+      botao.onclick = async () => {
+        try { await navigator.clipboard.writeText(c.codigo); botao.textContent = 'Copiado'; }
+        catch (e) { botao.textContent = 'Copie à mão'; }
+        setTimeout(() => { botao.textContent = 'Copiar código'; }, 1800);
+      };
+      card.append(el('div', { class: 'convite' }, 'Código de convite', el('code', { text: c.codigo }), botao));
+    }
+
+    // Participantes
+    const ids = membros.get(c.id) || [];
+    card.append(el('h4', { text: 'Mestre e jogadores' }),
+      el('ul', { class: 'lista-nomes' },
+        el('li', {}, nomes.get(c.mestre_id) || 'Mestre', ' ', el('small', { text: '(mestre)' })),
+        ids.map(id => el('li', { text: nomes.get(id) || 'Jogador' }))));
+
+    // Personagens
+    card.append(el('h4', { text: 'Personagens' }));
+    const ul = el('ul', { class: 'lista-nomes' });
+    if (mestre) {
+      // o mestre vê todas as fichas da campanha
+      const r = await sb.from('personagens').select('id,nome,nivel,jogador_id').eq('campanha_id', c.id).order('nome');
+      if (r.error) throw r.error;
+      r.data.forEach(p => ul.append(el('li', {},
+        el('a', { href: 'ficha.html?id=' + p.id, text: p.nome }), ' ',
+        el('small', { text: '(' + (nomes.get(p.jogador_id) || 'jogador') + ', nível ' + p.nivel + ')' }))));
+      if (!r.data.length) ul.append(el('li', { text: 'Nenhum personagem ainda' }));
+    } else {
+      // o jogador vê as próprias fichas e só o nome das dos colegas
+      const r = await sb.rpc('personagens_da_campanha', { p_campanha: c.id });
+      if (r.error) throw r.error;
+      r.data.forEach(p => ul.append(el('li', {},
+        p.meu ? el('a', { href: 'ficha.html?id=' + p.id, text: p.nome }) : p.nome,
+        p.meu ? el('small', { text: ' (seu)' }) : null)));
+      if (!r.data.length) ul.append(el('li', { text: 'Nenhum personagem ainda' }));
+    }
+    card.append(ul);
+
+    // Ações
+    const acoes = el('div', { class: 'acoes' });
+    if (jogador) {
+      acoes.append(el('a', { class: 'btn pequeno', href: 'ficha.html?novo=1&campanha=' + c.id, text: 'Criar personagem nesta campanha' }));
+      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Sair da campanha', onclick: () => sairDaCampanha(c) }));
+    }
+    if (mestre && !jogador) {
+      acoes.append(el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Jogar também nesta campanha',
+        onclick: () => entrarComCodigo(c.codigo) }));
+    }
+    if (mestre) {
+      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Excluir campanha', onclick: () => excluirCampanha(c) }));
+    }
+    card.append(acoes);
+    return card;
+  }
+
+  async function entrarComCodigo(codigo) {
+    const r = await sb.rpc('entrar_na_campanha', { p_codigo: codigo });
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return false; }
+    aviso('#cMsg', 'Você entrou na campanha ' + r.data + '.', 'bom');
+    await recarregar();
+    return true;
+  }
+
+  $('#fEntrar').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const codigo = $('#eCodigo').value.trim();
+    if (!codigo) { aviso('#cMsg', 'Digite o código de convite.', 'ruim'); return; }
+    if (await entrarComCodigo(codigo)) $('#eCodigo').value = '';
+  });
+
+  $('#fCriarCamp').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const nome = $('#cNome').value.trim();
+    if (!nome) { aviso('#cMsg', 'Dê um nome para a campanha.', 'ruim'); return; }
+    const r = await sb.from('campanhas')
+      .insert({ nome, descricao: $('#cDesc').value.trim() || null, mestre_id: EU })
+      .select('codigo').single();
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    $('#cNome').value = ''; $('#cDesc').value = '';
+    aviso('#cMsg', 'Campanha criada. Passe o código ' + r.data.codigo + ' para os jogadores.', 'bom');
+    await recarregar();
+  });
+
+  async function sairDaCampanha(c) {
+    if (!confirm('Sair de ' + c.nome + '? Seus personagens dela continuam existindo, mas ficam isolados e perdem as armas da campanha.')) return;
+    const r = await sb.rpc('sair_da_campanha', { p_campanha: c.id });
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    aviso('#cMsg', 'Você saiu de ' + c.nome + '.', 'bom');
+    await recarregar();
+  }
+
+  async function excluirCampanha(c) {
+    if (!confirm('Excluir a campanha ' + c.nome + '? Os personagens dela continuam existindo, isolados. As armas da campanha serão apagadas. Isso não pode ser desfeito.')) return;
+    const r = await sb.from('campanhas').delete().eq('id', c.id);
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    aviso('#cMsg', 'Campanha ' + c.nome + ' excluída.', 'bom');
+    await recarregar();
+  }
+
+  // ==================================================================
+  // ARMAS
+  // ==================================================================
+  const podeEditar = a => a.jogador_id === EU || campanhas.some(c => c.id === a.campanha_id && souMestre(c));
+
+  async function carregarArmas() {
+    const r = await sb.from('armas').select('*').order('nome');
+    if (r.error) throw r.error;
+    // mostra só as minhas pessoais e as das campanhas em que estou
+    armas = r.data.filter(a => (a.campanha_id === null && a.jogador_id === EU) || campanhas.some(c => c.id === a.campanha_id));
+    preencherOnde();
+    desenharArmas();
+  }
+
+  function preencherOnde() {
+    const sel = $('#aOnde'), atual = sel.value;
+    sel.textContent = '';
+    sel.append(el('option', { value: '', text: 'Minhas armas (pessoal)' }));
+    campanhas.forEach(c => sel.append(el('option', { value: c.id, text: 'Campanha: ' + c.nome })));
+    sel.value = atual;
+    if (sel.selectedIndex < 0) sel.value = '';
+  }
+
+  function desenharArmas() {
+    const lista = $('#listaArmas');
+    lista.textContent = '';
+    const grupos = [{ titulo: 'Minhas armas', itens: armas.filter(a => a.campanha_id === null) }];
+    campanhas.forEach(c => grupos.push({ titulo: 'Campanha: ' + c.nome, itens: armas.filter(a => a.campanha_id === c.id) }));
+    const comItens = grupos.filter(g => g.itens.length);
+    if (!comItens.length) {
+      lista.append(el('div', { class: 'vazio' }, el('p', { text: 'Nenhuma arma ainda. Crie a primeira no formulário ao lado.' })));
+      return;
+    }
+    comItens.forEach(g => {
+      const bloco = el('div', { class: 'grupo-armas' }, el('h3', { text: g.titulo }));
+      g.itens.forEach(a => bloco.append(cartaoArma(a)));
+      lista.append(bloco);
+    });
+  }
+
+  function cartaoArma(a) {
+    const detalhes = [a.alcance, a.atributo ? ATRIBUTOS[a.atributo] + ' (' + a.atributo + ')' : null].filter(Boolean).join(', ');
+    return el('div', { class: 'arma' + (armaAberta && armaAberta.id === a.id ? ' ativa' : '') },
+      el('div', { class: 'dado', text: a.dano || '—', title: 'Dano' }),
+      el('div', {}, el('b', { text: a.nome }),
+        detalhes ? el('div', { class: 'det', text: detalhes }) : null,
+        a.efeito ? el('div', { class: 'det', text: a.efeito }) : null),
+      podeEditar(a)
+        ? el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Editar', onclick: () => abrirArma(a) })
+        : el('span', { class: 'nota', text: 'Só o mestre edita' }));
+  }
+
+  function abrirArma(a) {
+    armaAberta = a || null;
+    $('#aNome').value = a ? a.nome : '';
+    $('#aDano').value = a && a.dano || '';
+    $('#aAlcance').value = a && a.alcance || '';
+    if ($('#aAlcance').selectedIndex < 0) {   // alcance antigo que não está na lista
+      $('#aAlcance').append(el('option', { value: a.alcance, text: a.alcance }));
+      $('#aAlcance').value = a.alcance;
+    }
+    $$('input[name=aAtr]').forEach(r => { r.checked = !!a && a.atributo === r.value; });
+    $('#aEfeito').value = a && a.efeito || '';
+    $('#aOnde').value = a && a.campanha_id ? a.campanha_id : '';
+    $('#aTitulo').textContent = a ? 'Editar ' + a.nome : 'Nova arma';
+    $('#aSalvar').textContent = a ? 'Salvar alterações' : 'Criar arma';
+    $('#aExcluir').hidden = !a;
+    aviso('#aMsg', '');
+    desenharArmas();
+    if (a) $('#fArma').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('#aNova').addEventListener('click', () => abrirArma(null));
+
+  $('#fArma').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const nome = $('#aNome').value.trim();
+    if (!nome) { aviso('#aMsg', 'Dê um nome para a arma.', 'ruim'); return; }
+    const atr = $('input[name=aAtr]:checked');
+    const linha = {
+      nome,
+      dano: $('#aDano').value.trim() || null,
+      alcance: $('#aAlcance').value || null,
+      atributo: atr ? atr.value : null,
+      efeito: $('#aEfeito').value.trim() || null,
+      campanha_id: $('#aOnde').value ? +$('#aOnde').value : null
+    };
+    let r;
+    if (armaAberta) r = await sb.from('armas').update(linha).eq('id', armaAberta.id).select('*').single();
+    else r = await sb.from('armas').insert(Object.assign({ jogador_id: EU }, linha)).select('*').single();
+    if (r.error) { aviso('#aMsg', erroMsg(r.error), 'ruim'); return; }
+    const eraNova = !armaAberta;
+    await carregarArmas();
+    abrirArma(armas.find(a => a.id === r.data.id) || null);
+    aviso('#aMsg', eraNova ? 'Arma ' + nome + ' criada.' : 'Arma ' + nome + ' salva.', 'bom');
+  });
+
+  $('#aExcluir').addEventListener('click', async () => {
+    if (!armaAberta) return;
+    if (!confirm('Excluir a arma ' + armaAberta.nome + '? Ela também sai das fichas que a usam. Isso não pode ser desfeito.')) return;
+    const nome = armaAberta.nome;
+    const r = await sb.from('armas').delete().eq('id', armaAberta.id);
+    if (r.error) { aviso('#aMsg', erroMsg(r.error), 'ruim'); return; }
+    abrirArma(null);
+    await carregarArmas();
+    aviso('#aMsg', 'Arma ' + nome + ' excluída.', 'bom');
+  });
+
+  // ------------------------------------------------------------------
+  await recarregar();
+})();
+</script>
+</body>
+</html>
