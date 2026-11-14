@@ -46,7 +46,7 @@
 
   // Já entrou antes? Vai direto para o lobby.
   const { data } = await sb.auth.getSession();
-  if (data && data.session) { location.replace('lobby.html'); return; }
+  if (data && data.session) { location.replace('lobby.html'); return; }   // já entrou antes: vai direto
   aviso('#lMsg', 'Entre com seu e-mail e senha.');
 
   function campos() {

@@ -18,8 +18,17 @@ const BUCKET = 'fotos-personagens';   // pasta das fotos no Storage
 const FOTO_MAX = 20 * 1024 * 1024;    // 20 MB
 
 const sb = (window.supabase && window.supabase.createClient)
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,        // guarda o login neste aparelho (localStorage)
+        autoRefreshToken: true,      // renova sozinho, então o login não expira de uso
+        detectSessionInUrl: true
+      }
+    })
   : null;
+
+// Pede ao navegador para não apagar os dados do site por falta de espaço (melhor esforço)
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
 // ---------- ajudantes ----------
 const $  = (s, r = document) => r.querySelector(s);
@@ -101,8 +110,10 @@ function erroMsg(e) {
 // tabela jogadores ligada à conta.
 async function exigirLogin(alvoAviso) {
   if (!sb) { aviso(alvoAviso, 'Não foi possível carregar a biblioteca do Supabase. Verifique a internet.', 'ruim'); return null; }
-  const { data } = await sb.auth.getSession();
+  const { data, error } = await sb.auth.getSession();
   const sessao = data && data.session;
+  // Sem internet o login continua guardado: avisa em vez de mandar para a tela de entrada
+  if (!sessao && error) { aviso(alvoAviso, 'Sem conexão com o servidor. Verifique a internet e recarregue a página.', 'ruim'); return null; }
   if (!sessao) { location.replace('index.html'); return null; }
   const r = await sb.from('jogadores').select('id,nome,email').eq('auth_id', sessao.user.id).maybeSingle();
   if (r.error) { aviso(alvoAviso, erroMsg(r.error), 'ruim'); return null; }
