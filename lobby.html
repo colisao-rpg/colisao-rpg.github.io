@@ -368,10 +368,14 @@
     ev.preventDefault();
     const nome = $('#cNome').value.trim();
     if (!nome) { aviso('#cMsg', 'Dê um nome para a campanha.', 'ruim'); return; }
-    const r = await sb.from('campanhas')
-      .insert({ nome, descricao: $('#cDesc').value.trim() || null, mestre_id: EU })
-      .select('codigo').single();
-    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    // Cria e só depois lê o código: pedir o código na mesma chamada do insert
+    // pode ser barrado pelas regras do banco, que ainda não "enxergam" a linha nova.
+    const ins = await sb.from('campanhas')
+      .insert({ nome, descricao: $('#cDesc').value.trim() || null, mestre_id: EU });
+    if (ins.error) { aviso('#cMsg', erroMsg(ins.error), 'ruim'); return; }
+    const r = await sb.from('campanhas').select('codigo')
+      .eq('mestre_id', EU).eq('nome', nome).order('id', { ascending: false }).limit(1).single();
+    if (r.error) { aviso('#cMsg', 'Campanha criada, mas não consegui ler o código. Recarregue a página para vê-lo.', 'ruim'); await recarregar(); return; }
     $('#cNome').value = ''; $('#cDesc').value = '';
     aviso('#cMsg', 'Campanha criada. Passe o código ' + r.data.codigo + ' para os jogadores.', 'bom');
     await recarregar();
