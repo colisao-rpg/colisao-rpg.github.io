@@ -252,3 +252,16 @@ textarea{resize:vertical;min-height:90px}
   input,select,textarea,.attr{background:#fff!important;color:#000!important;border-color:#999!important}
   .attr em,.dica,label{color:#444}
 }
+
+
+/* ---------- janela de confirmar exclusão ---------- */
+.btn.perigo-cheio{background:var(--esporo);color:#1a0612;border-color:var(--esporo)}
+.btn.perigo-cheio:hover{filter:brightness(1.1)}
+dialog.confirmar{
+  background:var(--casca);color:var(--luz);border:1px solid rgba(255,95,162,.5);border-radius:14px;
+  padding:24px;max-width:min(440px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.6)
+}
+dialog.confirmar::backdrop{background:rgba(8,4,16,.75)}
+dialog.confirmar h3{font:700 20px var(--f-titulo);margin:0 0 10px;color:var(--esporo)}
+dialog.confirmar p{margin:0 0 20px;color:var(--nevoa);line-height:1.5}
+dialog.confirmar .acoes{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}

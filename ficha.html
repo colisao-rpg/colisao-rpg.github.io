@@ -484,7 +484,11 @@
   $('#bExcluir').onclick = async () => {
     if (!id) return;
     const nome = S.personagem || 'este personagem';
-    if (!confirm('Excluir ' + nome + '? A ficha, o inventário e a foto serão apagados. Isso não pode ser desfeito.')) return;
+    const ok = await confirmarExclusao({
+      titulo: 'Excluir ' + nome + '?',
+      texto: 'A ficha, o inventário e a foto serão apagados para sempre. Isso não pode ser desfeito.'
+    });
+    if (!ok) return;
     const r = await sb.from('personagens').delete().eq('id', id);
     if (r.error) { aviso('#sMsg', erroMsg(r.error), 'ruim'); return; }
     if (S.foto) await apagarFotoSeSobrou(S.foto, id);

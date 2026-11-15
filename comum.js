@@ -148,3 +148,26 @@ async function apagarFotoSeSobrou(url, exceto) {
     await sb.storage.from(BUCKET).remove([caminho]);
   } catch (e) { /* se falhar, a foto só fica sobrando no Storage */ }
 }
+
+
+// Janela de confirmação para ações que não têm volta (excluir).
+// Passo 1: o botão "Excluir" abre esta janela. Passo 2: só "Confirmar exclusão" apaga.
+// Devolve uma Promise: true se confirmou, false se cancelou (botão, Esc ou clique fora).
+function confirmarExclusao({ titulo, texto, rotulo = 'Confirmar exclusão' }) {
+  return new Promise(resolve => {
+    const bCancelar = el('button', { type: 'button', class: 'btn vazado', text: 'Cancelar' });
+    const bConfirmar = el('button', { type: 'button', class: 'btn perigo-cheio', text: rotulo });
+    const janela = el('dialog', { class: 'confirmar', 'aria-labelledby': 'confTitulo' },
+      el('h3', { id: 'confTitulo', text: titulo }),
+      el('p', { text: texto }),
+      el('div', { class: 'acoes' }, bCancelar, bConfirmar));
+    let resposta = false;
+    bConfirmar.addEventListener('click', () => { resposta = true; janela.close(); });
+    bCancelar.addEventListener('click', () => janela.close());
+    janela.addEventListener('click', ev => { if (ev.target === janela) janela.close(); });   // clique fora = cancelar
+    janela.addEventListener('close', () => { janela.remove(); resolve(resposta); });
+    document.body.append(janela);
+    janela.showModal();
+    bCancelar.focus();   // o foco começa em Cancelar: Enter sem querer não apaga
+  });
+}

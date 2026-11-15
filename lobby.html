@@ -255,7 +255,11 @@
   }
 
   async function excluirPersonagem(p) {
-    if (!confirm('Excluir ' + p.nome + '? A ficha, o inventário e a foto serão apagados. Isso não pode ser desfeito.')) return;
+    const ok = await confirmarExclusao({
+      titulo: 'Excluir ' + p.nome + '?',
+      texto: 'A ficha, o inventário e a foto serão apagados para sempre. Isso não pode ser desfeito.'
+    });
+    if (!ok) return;
     const r = await sb.from('personagens').delete().eq('id', p.id);
     if (r.error) { aviso('#pMsg', erroMsg(r.error), 'ruim'); return; }
     if (p.foto_url) await apagarFotoSeSobrou(p.foto_url, p.id);
