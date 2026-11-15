@@ -123,12 +123,47 @@ async function exigirLogin(alvoAviso) {
   return { user: sessao.user, eu: r.data };
 }
 
-// Preenche a barra do topo: "nome" e o botão Sair
+// Preenche a barra do topo: "nome" (clique para mudar) e o botão Sair
 function montarTopo(ctx) {
   const q = $('#quem');
-  if (q) { q.textContent = ''; q.append(el('b', { text: ctx.eu.nome })); }
+  if (q) {
+    q.textContent = '';
+    q.append(el('button', { type: 'button', class: 'meu-nome', title: 'Mudar meu nome', text: ctx.eu.nome,
+      onclick: () => mudarNome(ctx) }));
+  }
   const s = $('#sair');
   if (s) s.onclick = async () => { await sb.auth.signOut(); location.replace('index.html'); };
+}
+
+// Janela para mudar o nome do jogador (só a própria linha: a regra "editar_a_mim" do banco já permite)
+function mudarNome(ctx) {
+  const campo = el('input', { type: 'text', id: 'novoNome', maxlength: '40', value: ctx.eu.nome, autocomplete: 'nickname', required: '' });
+  const msg = el('p', { class: 'msg', role: 'status' });
+  const bCancelar = el('button', { type: 'button', class: 'btn vazado', text: 'Cancelar' });
+  const bSalvar = el('button', { type: 'submit', class: 'btn', text: 'Salvar nome' });
+  const form = el('form', { method: 'dialog' },
+    el('h3', { id: 'nomeTitulo', text: 'Mudar meu nome' }),
+    el('label', { for: 'novoNome', text: 'Nome de jogador' }), campo, msg,
+    el('div', { class: 'acoes' }, bCancelar, bSalvar));
+  const janela = el('dialog', { class: 'confirmar', 'aria-labelledby': 'nomeTitulo' }, form);
+  bCancelar.addEventListener('click', () => janela.close());
+  janela.addEventListener('click', ev => { if (ev.target === janela) janela.close(); });
+  janela.addEventListener('close', () => janela.remove());
+  form.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const nome = campo.value.trim();
+    if (!nome) { aviso(msg, 'Digite um nome.', 'ruim'); return; }
+    if (nome === ctx.eu.nome) { janela.close(); return; }
+    bSalvar.disabled = true;
+    const r = await sb.from('jogadores').update({ nome }).eq('id', ctx.eu.id).select('id');
+    bSalvar.disabled = false;
+    if (r.error) { aviso(msg, erroMsg(r.error), 'ruim'); return; }
+    if (!r.data || !r.data.length) { aviso(msg, 'Não foi possível salvar o nome. Tente entrar de novo.', 'ruim'); return; }
+    location.reload();   // recarrega para o nome novo aparecer em tudo (campanhas, membros)
+  });
+  document.body.append(janela);
+  janela.showModal();
+  campo.focus(); campo.select();
 }
 
 // ---------- fotos ----------
