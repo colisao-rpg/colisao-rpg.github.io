@@ -34,8 +34,8 @@
   --ok:#7fe0b8;
 
   --f-titulo:'Chakra Petch',system-ui,sans-serif;
-  --f-sigilo:'Colisao Sigilo','Chakra Petch',system-ui,sans-serif;   /* rótulos, botões e abas */
-  --f-display:'Titulo Metamorphous',Georgia,serif;                    /* títulos */
+  --f-sigilo:'Colisao Titulo',Georgia,serif;   /* rótulos, botões e abas */
+  --f-display:'Colisao Titulo',Georgia,serif;                    /* títulos */
   --f-texto:'Spectral',Georgia,serif;
 
   color-scheme:dark;
@@ -44,8 +44,7 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
 /* Fonte própria dos títulos, desenhada no estilo do ícone (agulhas e trinca). Só maiúsculas e um peso. */
-@font-face{font-family:'Titulo Metamorphous';src:url(fonte-titulo.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'Colisao Sigilo';src:url(fonte-sigilo.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Colisao Titulo';src:url(fonte-titulo.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap;size-adjust:114%}
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{
@@ -106,7 +105,7 @@ p{margin:0 0 .8em;max-width:68ch}
 /* ---------- botões ---------- */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  font:400 17px/1 var(--f-sigilo);letter-spacing:.06em;text-decoration:none;
+  font:400 17px/1 var(--f-sigilo);letter-spacing:.03em;text-decoration:none;
   color:var(--violeta-tinta);background:var(--violeta);
   border:1px solid var(--violeta);border-radius:8px;padding:10px 16px;cursor:pointer;
 }
@@ -122,7 +121,7 @@ p{margin:0 0 .8em;max-width:68ch}
 /* ---------- abas do lobby ---------- */
 .abas{display:flex;gap:4px;margin:0 0 24px;border-bottom:1px solid var(--veio)}
 .abas button{
-  font:400 19px var(--f-sigilo);letter-spacing:.06em;color:var(--nevoa);background:none;border:0;
+  font:400 19px var(--f-sigilo);letter-spacing:.03em;color:var(--nevoa);background:none;border:0;
   padding:12px 18px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;
 }
 .abas button:hover{color:var(--luz)}
@@ -139,7 +138,7 @@ p{margin:0 0 .8em;max-width:68ch}
 .vazio p{margin:0 auto .8em}
 
 /* ---------- formulários ---------- */
-label{display:block;font:400 16px var(--f-sigilo);letter-spacing:.05em;color:var(--nevoa);margin:0 0 4px}
+label{display:block;font:400 16px var(--f-sigilo);letter-spacing:.03em;color:var(--nevoa);margin:0 0 4px}
 input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{
   width:100%;font:inherit;font-size:16px;color:var(--luz);
   background:var(--campo);border:1px solid var(--veio);border-radius:8px;padding:9px 11px;
@@ -154,14 +153,14 @@ textarea{resize:vertical;min-height:90px}
 .radios{display:flex;gap:8px;flex-wrap:wrap}
 .radios label{
   display:flex;gap:6px;align-items:center;margin:0;cursor:pointer;
-  font:400 17px var(--f-sigilo);letter-spacing:.05em;color:var(--luz);
+  font:400 17px var(--f-sigilo);letter-spacing:.03em;color:var(--luz);
   border:1px solid var(--veio);border-radius:8px;padding:7px 11px;background:var(--campo);
 }
 .radios label:has(input:checked){border-color:var(--violeta);background:rgba(169,112,255,.14)}
 .radios small{font-weight:500;color:var(--nevoa)}
 
 /* ---------- etiquetas ---------- */
-.etiqueta{display:inline-block;font:400 15px/1 var(--f-sigilo);letter-spacing:.05em;border-radius:999px;padding:5px 10px;border:1px solid var(--veio-2);color:var(--nevoa);white-space:nowrap}
+.etiqueta{display:inline-block;font:400 15px/1 var(--f-sigilo);letter-spacing:.03em;border-radius:999px;padding:5px 10px;border:1px solid var(--veio-2);color:var(--nevoa);white-space:nowrap}
 .etiqueta.mestre{color:var(--violeta-tinta);background:var(--violeta);border-color:var(--violeta)}
 .etiqueta.jogador{color:var(--humanidade);border-color:var(--veio-2)}
 .etiqueta.isolado{color:var(--nevoa);border-style:dashed}
@@ -174,7 +173,7 @@ textarea{resize:vertical;min-height:90px}
 .dossie h3{margin:0 0 2px;font-size:20px}
 .dossie .sub{color:var(--nevoa);font-size:15px;margin:0 0 8px}
 .medidores{display:grid;gap:6px;margin:8px 0 0}
-.medidor{display:grid;grid-template-columns:88px 1fr 42px;align-items:center;gap:8px;font:400 15px var(--f-sigilo);letter-spacing:.05em;color:var(--nevoa)}
+.medidor{display:grid;grid-template-columns:88px 1fr 42px;align-items:center;gap:8px;font:400 15px var(--f-sigilo);letter-spacing:.03em;color:var(--nevoa)}
 .medidor .trilho{height:6px;border-radius:3px;background:var(--campo);overflow:hidden}
 .medidor .trilho i{display:block;height:100%;background:var(--humanidade)}
 .medidor.fric .trilho i{background:var(--esporo)}
@@ -195,7 +194,7 @@ textarea{resize:vertical;min-height:90px}
 .lista-nomes li{background:var(--campo);border:1px solid var(--veio);border-radius:8px;padding:4px 10px;font-size:15px}
 .lista-nomes li a{color:var(--luz)}
 .lista-nomes li small{color:var(--nevoa)}
-.campanha h4{font:400 17px var(--f-sigilo);letter-spacing:.05em;color:var(--nevoa);margin:12px 0 4px}
+.campanha h4{font:400 17px var(--f-sigilo);letter-spacing:.03em;color:var(--nevoa);margin:12px 0 4px}
 
 /* ---------- armas ---------- */
 .armas-layout{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:20px;align-items:start}
@@ -225,12 +224,12 @@ textarea{resize:vertical;min-height:90px}
 .ficha h2{color:var(--violeta);font-size:20px}
 .titulo-ficha{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
 .titulo-ficha h1{margin:0}
-.titulo-ficha .nivel{display:flex;align-items:center;gap:8px;font:400 17px var(--f-sigilo);letter-spacing:.05em;color:var(--nevoa)}
+.titulo-ficha .nivel{display:flex;align-items:center;gap:8px;font:400 17px var(--f-sigilo);letter-spacing:.03em;color:var(--nevoa)}
 .titulo-ficha .nivel input{width:76px}
 .situacao{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 16px;color:var(--nevoa);font:500 15px var(--f-titulo)}
 .situacao b{color:var(--luz)}
 .attr{border:1px solid var(--veio);border-radius:10px;padding:12px;background:var(--campo)}
-.attr b{display:block;font:400 20px var(--f-sigilo);letter-spacing:.05em}
+.attr b{display:block;font:400 20px var(--f-sigilo);letter-spacing:.03em}
 .attr em{display:block;font-style:italic;color:var(--nevoa);font-size:14px;margin-bottom:8px}
 .barra{height:14px;border-radius:7px;background:var(--abismo-2);border:1px solid var(--veio);overflow:hidden}
 .barra i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8b6dd8,var(--humanidade));transition:width .25s}
@@ -244,7 +243,7 @@ textarea{resize:vertical;min-height:90px}
 .inv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px 14px}
 .inv div{display:flex;gap:8px;align-items:center}
 .inv input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--violeta)}
-.chk{display:flex;gap:8px;align-items:center;font:400 17px var(--f-sigilo);letter-spacing:.05em;color:var(--luz)}
+.chk{display:flex;gap:8px;align-items:center;font:400 17px var(--f-sigilo);letter-spacing:.03em;color:var(--luz)}
 .chk input{accent-color:var(--violeta)}
 .dica{font-size:14px;color:var(--nevoa);margin:4px 0 0}
 .foto{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
