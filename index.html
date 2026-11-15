@@ -23,17 +23,25 @@
   </div>
 
   <div class="cartao-login">
-    <h2>Entrar</h2>
-    <p class="nota">Primeira vez? Preencha também o nome e clique em Criar conta.</p>
-    <form id="fLogin" class="g" novalidate>
+    <div class="abas" role="tablist" aria-label="Entrar ou criar conta">
+      <button type="button" role="tab" id="tEntrar" aria-selected="true" aria-controls="fLogin">Entrar</button>
+      <button type="button" role="tab" id="tCriar" aria-selected="false" aria-controls="fCadastro">Criar conta</button>
+    </div>
+
+    <form id="fLogin" class="g" novalidate aria-labelledby="tEntrar">
       <div><label for="lEmail">E-mail</label><input type="email" id="lEmail" autocomplete="email" required></div>
-      <div><label for="lSenha">Senha (mínimo 6 caracteres)</label><input type="password" id="lSenha" autocomplete="current-password" minlength="6" required></div>
-      <div><label for="lNome">Nome (só para criar conta)</label><input type="text" id="lNome" autocomplete="name"></div>
-      <div class="acoes">
-        <button type="submit" class="btn" id="bEntrar">Entrar</button>
-        <button type="button" class="btn vazado" id="bCriar">Criar conta</button>
-      </div>
+      <div><label for="lSenha">Senha</label><input type="password" id="lSenha" autocomplete="current-password" required></div>
+      <div class="acoes"><button type="submit" class="btn" id="bEntrar">Entrar</button></div>
     </form>
+
+    <form id="fCadastro" class="g" novalidate hidden aria-labelledby="tCriar">
+      <div><label for="cNome">Nome</label><input type="text" id="cNome" autocomplete="name" required></div>
+      <div><label for="cEmail">E-mail</label><input type="email" id="cEmail" autocomplete="email" required></div>
+      <div><label for="cSenha">Senha (mínimo 6 caracteres)</label><input type="password" id="cSenha" autocomplete="new-password" minlength="6" required></div>
+      <div><label for="cSenha2">Confirmar senha</label><input type="password" id="cSenha2" autocomplete="new-password" minlength="6" required></div>
+      <div class="acoes"><button type="submit" class="btn" id="bCriar">Criar conta</button></div>
+    </form>
+
     <p class="msg" id="lMsg" role="status">Conectando...</p>
   </div>
 </main>
@@ -47,37 +55,51 @@
   // Já entrou antes? Vai direto para o lobby.
   const { data } = await sb.auth.getSession();
   if (data && data.session) { location.replace('lobby.html'); return; }   // já entrou antes: vai direto
-  aviso('#lMsg', 'Entre com seu e-mail e senha.');
 
-  function campos() {
-    const email = $('#lEmail').value.trim(), senha = $('#lSenha').value;
-    if (!email || !senha) { aviso('#lMsg', 'Preencha o e-mail e a senha.', 'ruim'); return null; }
-    if (senha.length < 6) { aviso('#lMsg', 'A senha precisa ter pelo menos 6 caracteres.', 'ruim'); return null; }
-    return { email, senha };
+  // ---- abas (Entrar / Criar conta) ----
+  function aba(qual) {
+    const criar = qual === 'criar';
+    $('#fLogin').hidden = criar; $('#fCadastro').hidden = !criar;
+    $('#tEntrar').setAttribute('aria-selected', String(!criar));
+    $('#tCriar').setAttribute('aria-selected', String(criar));
+    aviso('#lMsg', criar ? 'Crie sua conta para guardar seus personagens.' : 'Entre com seu e-mail e senha.');
+    history.replaceState(null, '', criar ? '#criar' : location.pathname + location.search);
+    (criar ? $('#cNome') : $('#lEmail')).focus();
   }
+  $('#tEntrar').addEventListener('click', () => aba('entrar'));
+  $('#tCriar').addEventListener('click', () => aba('criar'));
+  if (location.hash === '#criar') aba('criar'); else aviso('#lMsg', 'Entre com seu e-mail e senha.');
+
   function ocupado(sim) { $('#bEntrar').disabled = sim; $('#bCriar').disabled = sim; }
 
-  // Entrar
+  // ---- Entrar ----
   $('#fLogin').addEventListener('submit', async ev => {
     ev.preventDefault();
-    const c = campos(); if (!c) return;
+    const email = $('#lEmail').value.trim(), senha = $('#lSenha').value;
+    if (!email || !senha) { aviso('#lMsg', 'Preencha o e-mail e a senha.', 'ruim'); return; }
     ocupado(true); aviso('#lMsg', 'Entrando...');
-    const r = await sb.auth.signInWithPassword({ email: c.email, password: c.senha });
+    const r = await sb.auth.signInWithPassword({ email, password: senha });
     ocupado(false);
     if (r.error) { aviso('#lMsg', erroMsg(r.error), 'ruim'); return; }
     location.replace('lobby.html');
   });
 
-  // Criar conta (o gatilho do banco cria o jogador com o nome digitado)
-  $('#bCriar').addEventListener('click', async () => {
-    const c = campos(); if (!c) return;
+  // ---- Criar conta (o gatilho do banco cria o jogador com o nome digitado) ----
+  $('#fCadastro').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const nome = $('#cNome').value.trim(), email = $('#cEmail').value.trim();
+    const senha = $('#cSenha').value, senha2 = $('#cSenha2').value;
+    if (!nome || !email || !senha || !senha2) { aviso('#lMsg', 'Preencha todos os campos.', 'ruim'); return; }
+    if (senha.length < 6) { aviso('#lMsg', 'A senha precisa ter pelo menos 6 caracteres.', 'ruim'); return; }
+    if (senha !== senha2) { aviso('#lMsg', 'As senhas não são iguais. Digite de novo em Confirmar senha.', 'ruim'); $('#cSenha2').focus(); return; }
     ocupado(true); aviso('#lMsg', 'Criando conta...');
-    const r = await sb.auth.signUp({ email: c.email, password: c.senha, options: { data: { nome: $('#lNome').value.trim() } } });
+    const r = await sb.auth.signUp({ email, password: senha, options: { data: { nome } } });
     ocupado(false);
     if (r.error) { aviso('#lMsg', erroMsg(r.error), 'ruim'); return; }
     if (r.data.session) { location.replace('lobby.html'); return; }
     // Sem sessão = o projeto exige confirmação por e-mail
-    aviso('#lMsg', 'Conta criada. Abra o link de confirmação que chegou em ' + c.email + ' e depois clique em Entrar.', 'bom');
+    aba('entrar'); $('#lEmail').value = email;
+    aviso('#lMsg', 'Conta criada. Abra o link de confirmação que chegou em ' + email + ' e depois clique em Entrar.', 'bom');
   });
 })();
 </script>
