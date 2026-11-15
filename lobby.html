@@ -17,8 +17,8 @@
      Abas:
        Personagens: os personagens da conta (isolados ou em campanha),
                     criar novo, levar para uma campanha, tirar dela
-       Campanhas:   criar campanha (vira mestre), entrar com código,
-                    ver quem está em cada uma
+       Campanhas:   criar campanha (vira mestre), entrar com código e
+                    escolher em qual campanha entrar (campanha.html)
        Armas:       criar e editar armas pessoais ou da campanha
      ===================================================================== -->
 <header class="topo">
@@ -206,7 +206,7 @@
     else retrato.textContent = iniciais(p.nome);
 
     const etiqueta = p.campanha_id
-      ? el('span', { class: 'etiqueta jogador', text: nomeCampanha(p.campanha_id) })
+      ? el('a', { class: 'etiqueta jogador', href: 'campanha.html?id=' + p.campanha_id, text: nomeCampanha(p.campanha_id) })
       : el('span', { class: 'etiqueta isolado', text: 'Isolado' });
 
     const corpo = el('div', {},
@@ -280,73 +280,23 @@
     }
     // mestre primeiro
     const ordem = campanhas.slice().sort((a, b) => (souMestre(b) - souMestre(a)) || a.nome.localeCompare(b.nome));
-    for (const c of ordem) lista.append(await cartaoCampanha(c));
+    ordem.forEach(c => lista.append(cartaoCampanha(c)));
   }
 
-  async function cartaoCampanha(c) {
+  // Aqui só se escolhe a campanha: os detalhes ficam em campanha.html?id=...
+  function cartaoCampanha(c) {
     const mestre = souMestre(c), jogador = souJogadorEm.has(c.id);
-    const etiquetas = el('div', { class: 'acoes' },
-      mestre ? el('span', { class: 'etiqueta mestre', text: 'Você é o mestre' }) : null,
-      jogador ? el('span', { class: 'etiqueta jogador', text: 'Você joga' }) : null);
-
-    const card = el('article', { class: 'campanha' + (mestre ? ' sou-mestre' : '') },
-      el('header', {}, el('div', {}, el('h3', { text: c.nome }),
-        c.descricao ? el('p', { class: 'nota', style: 'margin:4px 0 0', text: c.descricao }) : null), etiquetas));
-
-    if (mestre) {
-      const botao = el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Copiar código' });
-      botao.onclick = async () => {
-        try { await navigator.clipboard.writeText(c.codigo); botao.textContent = 'Copiado'; }
-        catch (e) { botao.textContent = 'Copie à mão'; }
-        setTimeout(() => { botao.textContent = 'Copiar código'; }, 1800);
-      };
-      card.append(el('div', { class: 'convite' }, 'Código de convite', el('code', { text: c.codigo }), botao));
-    }
-
-    // Participantes
-    const ids = membros.get(c.id) || [];
-    card.append(el('h4', { text: 'Mestre e jogadores' }),
-      el('ul', { class: 'lista-nomes' },
-        el('li', {}, nomes.get(c.mestre_id) || 'Mestre', ' ', el('small', { text: '(mestre)' })),
-        ids.map(id => el('li', { text: nomes.get(id) || 'Jogador' }))));
-
-    // Personagens
-    card.append(el('h4', { text: 'Personagens' }));
-    const ul = el('ul', { class: 'lista-nomes' });
-    if (mestre) {
-      // o mestre vê todas as fichas da campanha
-      const r = await sb.from('personagens').select('id,nome,nivel,jogador_id').eq('campanha_id', c.id).order('nome');
-      if (r.error) throw r.error;
-      r.data.forEach(p => ul.append(el('li', {},
-        el('a', { href: 'ficha.html?id=' + p.id, text: p.nome }), ' ',
-        el('small', { text: '(' + (nomes.get(p.jogador_id) || 'jogador') + ', nível ' + p.nivel + ')' }))));
-      if (!r.data.length) ul.append(el('li', { text: 'Nenhum personagem ainda' }));
-    } else {
-      // o jogador vê as próprias fichas e só o nome das dos colegas
-      const r = await sb.rpc('personagens_da_campanha', { p_campanha: c.id });
-      if (r.error) throw r.error;
-      r.data.forEach(p => ul.append(el('li', {},
-        p.meu ? el('a', { href: 'ficha.html?id=' + p.id, text: p.nome }) : p.nome,
-        p.meu ? el('small', { text: ' (seu)' }) : null)));
-      if (!r.data.length) ul.append(el('li', { text: 'Nenhum personagem ainda' }));
-    }
-    card.append(ul);
-
-    // Ações
-    const acoes = el('div', { class: 'acoes' });
-    if (jogador) {
-      acoes.append(el('a', { class: 'btn pequeno', href: 'ficha.html?novo=1&campanha=' + c.id, text: 'Criar personagem nesta campanha' }));
-      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Sair da campanha', onclick: () => sairDaCampanha(c) }));
-    }
-    if (mestre && !jogador) {
-      acoes.append(el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Jogar também nesta campanha',
-        onclick: () => entrarComCodigo(c.codigo) }));
-    }
-    if (mestre) {
-      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Excluir campanha', onclick: () => excluirCampanha(c) }));
-    }
-    card.append(acoes);
-    return card;
+    const qtd = (membros.get(c.id) || []).length;
+    return el('article', { class: 'campanha' + (mestre ? ' sou-mestre' : '') },
+      el('header', {},
+        el('div', {},
+          el('h3', {}, el('a', { href: 'campanha.html?id=' + c.id, text: c.nome })),
+          c.descricao ? el('p', { class: 'nota', style: 'margin:4px 0 0', text: c.descricao }) : null),
+        el('div', { class: 'acoes' },
+          mestre ? el('span', { class: 'etiqueta mestre', text: 'Você é o mestre' }) : null,
+          jogador ? el('span', { class: 'etiqueta jogador', text: 'Você joga' }) : null)),
+      el('p', { class: 'nota', style: 'margin:10px 0', text: qtd === 1 ? '1 jogador' : qtd + ' jogadores' }),
+      el('a', { class: 'btn pequeno', href: 'campanha.html?id=' + c.id, text: 'Abrir campanha' }));
   }
 
   async function entrarComCodigo(codigo) {
@@ -373,29 +323,12 @@
     const ins = await sb.from('campanhas')
       .insert({ nome, descricao: $('#cDesc').value.trim() || null, mestre_id: EU });
     if (ins.error) { aviso('#cMsg', erroMsg(ins.error), 'ruim'); return; }
-    const r = await sb.from('campanhas').select('codigo')
+    const r = await sb.from('campanhas').select('id,codigo')
       .eq('mestre_id', EU).eq('nome', nome).order('id', { ascending: false }).limit(1).single();
-    if (r.error) { aviso('#cMsg', 'Campanha criada, mas não consegui ler o código. Recarregue a página para vê-lo.', 'ruim'); await recarregar(); return; }
-    $('#cNome').value = ''; $('#cDesc').value = '';
-    aviso('#cMsg', 'Campanha criada. Passe o código ' + r.data.codigo + ' para os jogadores.', 'bom');
-    await recarregar();
+    if (r.error) { aviso('#cMsg', 'Campanha criada, mas não consegui abrir a página dela. Procure-a na lista abaixo.', 'ruim'); await recarregar(); return; }
+    location.href = 'campanha.html?id=' + r.data.id;   // a página da campanha mostra o código de convite
+    return;
   });
-
-  async function sairDaCampanha(c) {
-    if (!confirm('Sair de ' + c.nome + '? Seus personagens dela continuam existindo, mas ficam isolados e perdem as armas da campanha.')) return;
-    const r = await sb.rpc('sair_da_campanha', { p_campanha: c.id });
-    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
-    aviso('#cMsg', 'Você saiu de ' + c.nome + '.', 'bom');
-    await recarregar();
-  }
-
-  async function excluirCampanha(c) {
-    if (!confirm('Excluir a campanha ' + c.nome + '? Os personagens dela continuam existindo, isolados. As armas da campanha serão apagadas. Isso não pode ser desfeito.')) return;
-    const r = await sb.from('campanhas').delete().eq('id', c.id);
-    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
-    aviso('#cMsg', 'Campanha ' + c.nome + ' excluída.', 'bom');
-    await recarregar();
-  }
 
   // ==================================================================
   // ARMAS

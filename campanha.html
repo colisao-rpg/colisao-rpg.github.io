@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campanha — Colisão RPG</title>
+<link rel="icon" href="icone-32.png" type="image/png" sizes="32x32">
+<link rel="icon" href="icone-48.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#020107">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<!-- =====================================================================
+     campanha.html?id=NÚMERO — a página de UMA campanha
+     O lobby (aba Campanhas) só lista e leva até aqui.
+     Mestre: código de convite, todas as fichas, excluir a campanha.
+     Jogador: colegas, nomes dos personagens do grupo, criar ficha, sair.
+     As regras de quem pode ver e mexer continuam no banco (RLS).
+     ===================================================================== -->
+<header class="topo">
+  <a class="marca" href="lobby.html">Colisão RPG</a>
+  <div class="quem"><span id="quem"></span><button type="button" class="btn vazado pequeno" id="sair">Sair</button></div>
+</header>
+
+<main class="miolo estreito">
+  <p><a href="lobby.html#campanhas">← Voltar para as campanhas</a></p>
+  <p class="msg" id="geral" role="status"></p>
+  <div id="pagina"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="comum.js"></script>
+<script>
+(async function () {
+  const ctx = await exigirLogin('#geral');
+  if (!ctx) return;
+  montarTopo(ctx);
+  const EU = ctx.eu.id;
+  const id = +new URLSearchParams(location.search).get('id');
+  const pagina = $('#pagina');
+  const voltar = () => location.replace('lobby.html#campanhas');
+
+  if (!id) { aviso('#geral', 'Campanha não indicada. Escolha uma na aba Campanhas do lobby.', 'ruim'); return; }
+
+  async function carregar() {
+    // as regras do banco só devolvem a campanha se eu for o mestre ou jogador dela
+    const c = await sb.from('campanhas').select('id,nome,descricao,mestre_id,codigo').eq('id', id).maybeSingle();
+    if (c.error) throw c.error;
+    if (!c.data) { pagina.textContent = ''; aviso('#geral', 'Campanha não encontrada, ou você não participa dela.', 'ruim'); return; }
+    const camp = c.data;
+    const cj = await sb.from('campanha_jogadores').select('jogador_id').eq('campanha_id', id);
+    if (cj.error) throw cj.error;
+    const idsJogadores = cj.data.map(x => x.jogador_id);
+    const j = await sb.from('jogadores').select('id,nome');
+    if (j.error) throw j.error;
+    const nomes = new Map(j.data.map(x => [x.id, x.nome]));
+    desenhar(camp, idsJogadores, nomes, await personagens(camp, nomes));
+    document.title = camp.nome + ' — Colisão RPG';
+  }
+
+  // mestre: todas as fichas. Jogador: as próprias e só o nome das dos colegas.
+  async function personagens(camp, nomes) {
+    if (camp.mestre_id === EU) {
+      const r = await sb.from('personagens').select('id,nome,nivel,jogador_id').eq('campanha_id', id).order('nome');
+      if (r.error) throw r.error;
+      return r.data.map(p => ({ id: p.id, nome: p.nome, abrir: true,
+        nota: '(' + (nomes.get(p.jogador_id) || 'jogador') + ', nível ' + p.nivel + ')' }));
+    }
+    const r = await sb.rpc('personagens_da_campanha', { p_campanha: id });
+    if (r.error) throw r.error;
+    return r.data.map(p => ({ id: p.id, nome: p.nome, abrir: !!p.meu, nota: p.meu ? '(seu)' : '' }));
+  }
+
+  function desenhar(c, idsJogadores, nomes, fichas) {
+    const mestre = c.mestre_id === EU, jogador = idsJogadores.includes(EU);
+    pagina.textContent = '';
+
+    const etiquetas = el('div', { class: 'acoes' },
+      mestre ? el('span', { class: 'etiqueta mestre', text: 'Você é o mestre' }) : null,
+      jogador ? el('span', { class: 'etiqueta jogador', text: 'Você joga' }) : null);
+    pagina.append(el('div', { class: 'cabeca' },
+      el('div', {}, el('h1', { text: c.nome }),
+        c.descricao ? el('p', { class: 'nota', style: 'margin:4px 0 0', text: c.descricao }) : null),
+      etiquetas));
+
+    const card = el('article', { class: 'campanha' + (mestre ? ' sou-mestre' : '') });
+
+    if (mestre) {
+      const botao = el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Copiar código' });
+      botao.onclick = async () => {
+        try { await navigator.clipboard.writeText(c.codigo); botao.textContent = 'Copiado'; }
+        catch (e) { botao.textContent = 'Copie à mão'; }
+        setTimeout(() => { botao.textContent = 'Copiar código'; }, 1800);
+      };
+      card.append(el('div', { class: 'convite' }, 'Código de convite', el('code', { text: c.codigo }), botao));
+    }
+
+    card.append(el('h4', { text: 'Mestre e jogadores' }),
+      el('ul', { class: 'lista-nomes' },
+        el('li', {}, nomes.get(c.mestre_id) || 'Mestre', ' ', el('small', { text: '(mestre)' })),
+        idsJogadores.map(j => el('li', { text: nomes.get(j) || 'Jogador' }))));
+
+    card.append(el('h4', { text: 'Personagens' }));
+    const ul = el('ul', { class: 'lista-nomes' });
+    fichas.forEach(p => ul.append(el('li', {},
+      p.abrir ? el('a', { href: 'ficha.html?id=' + p.id, text: p.nome }) : p.nome,
+      p.nota ? el('small', { text: ' ' + p.nota }) : null)));
+    if (!fichas.length) ul.append(el('li', { text: 'Nenhum personagem ainda' }));
+    card.append(ul);
+
+    const acoes = el('div', { class: 'acoes' });
+    if (jogador) {
+      acoes.append(el('a', { class: 'btn pequeno', href: 'ficha.html?novo=1&campanha=' + c.id, text: 'Criar personagem nesta campanha' }));
+    }
+    if (mestre && !jogador) {
+      acoes.append(el('button', { type: 'button', class: 'btn vazado pequeno', text: 'Jogar também nesta campanha', onclick: () => jogarTambem(c) }));
+    }
+    acoes.append(el('a', { class: 'btn vazado pequeno', href: 'lobby.html#armas', text: 'Armas' }));
+    if (jogador) {
+      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Sair da campanha', onclick: () => sair(c) }));
+    }
+    if (mestre) {
+      acoes.append(el('button', { type: 'button', class: 'btn perigo pequeno', text: 'Excluir campanha', onclick: () => excluir(c) }));
+    }
+    card.append(acoes);
+    pagina.append(card, el('p', { class: 'msg', id: 'cMsg', role: 'status' }));
+  }
+
+  async function jogarTambem(c) {
+    const r = await sb.rpc('entrar_na_campanha', { p_codigo: c.codigo });
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    await carregar();
+    aviso('#cMsg', 'Você agora também joga em ' + c.nome + '.', 'bom');
+  }
+
+  async function sair(c) {
+    if (!confirm('Sair de ' + c.nome + '? Seus personagens dela continuam existindo, mas ficam isolados e perdem as armas da campanha.')) return;
+    const r = await sb.rpc('sair_da_campanha', { p_campanha: c.id });
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    voltar();
+  }
+
+  async function excluir(c) {
+    const ok = await confirmarExclusao({
+      titulo: 'Excluir a campanha ' + c.nome + '?',
+      texto: 'Os personagens dela continuam existindo, isolados. As armas da campanha serão apagadas para sempre. Isso não pode ser desfeito.'
+    });
+    if (!ok) return;
+    const r = await sb.from('campanhas').delete().eq('id', c.id);
+    if (r.error) { aviso('#cMsg', erroMsg(r.error), 'ruim'); return; }
+    voltar();
+  }
+
+  try { await carregar(); }
+  catch (e) { aviso('#geral', erroMsg(e), 'ruim'); }
+})();
+</script>
+</body>
+</html>
