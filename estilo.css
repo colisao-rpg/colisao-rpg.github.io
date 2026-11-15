@@ -47,11 +47,20 @@ body{
   margin:0;min-height:100vh;
   color:var(--luz);
   font:17px/1.6 var(--f-texto);
+  background:#030108;
+}
+/* Fundo padrão: o símbolo inteiro, fixo atrás do conteúdo (funciona também no celular) */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
-    radial-gradient(900px 520px at 12% -8%, rgba(139,77,255,.22), transparent 62%),
-    radial-gradient(700px 480px at 105% 0%, rgba(255,95,162,.08), transparent 60%),
-    var(--abismo);
-  background-attachment:fixed;
+    radial-gradient(900px 520px at 12% -8%, rgba(139,77,255,.18), transparent 62%),
+    radial-gradient(700px 480px at 105% 0%, rgba(255,95,162,.07), transparent 60%),
+    linear-gradient(rgba(6,3,14,.52), rgba(6,3,14,.52)),   /* véu: mantém o texto legível */
+    url(fundo.jpg) center / contain no-repeat,
+    #030108;
+}
+@media (max-aspect-ratio:1/1){   /* celular em pé: símbolo maior, cortando só as bordas escuras */
+  body::before{background-size:auto,auto,auto,auto 82%,auto}
 }
 img{max-width:100%}
 a{color:var(--violeta)}
@@ -248,6 +257,7 @@ textarea{resize:vertical;min-height:90px}
 /* ---------- impressão: fundo branco, sem botões ---------- */
 @media print{
   body{background:#fff;color:#000}
+  body::before{display:none}
   .topo,.barra-salvar,.foto .acoes,.situacao .btn,.so-tela{display:none!important}
   .ficha section{background:#fff;border-color:#999;break-inside:avoid}
   .ficha h2,.attr b,.ctl strong{color:#000}
