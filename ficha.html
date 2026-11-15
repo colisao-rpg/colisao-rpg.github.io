@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#020107">
-<link rel="stylesheet" href="estilo.css?v=202611151610">
+<link rel="stylesheet" href="estilo.css?v=202611151823">
 </head>
 <body>
 <!-- =====================================================================
@@ -39,6 +39,21 @@
     </div>
 
     <section>
+      <div class="g g2">
+        <div><label for="per">Personagem</label><input type="text" id="per" data-k="personagem"></div>
+        <div><label for="niv">Nível</label><input type="number" id="niv" data-k="nivel" min="1" max="10"></div>
+      </div>
+    </section>
+
+    <nav class="abas" role="tablist" aria-label="Seções da ficha">
+      <button type="button" role="tab" id="t-atributos" aria-controls="aba-atributos" aria-selected="true">Atributos</button>
+      <button type="button" role="tab" id="t-inventario" aria-controls="aba-inventario" aria-selected="false">Inventário</button>
+      <button type="button" role="tab" id="t-descricao" aria-controls="aba-descricao" aria-selected="false">Descrição</button>
+    </nav>
+
+    <div class="painel" id="aba-atributos" role="tabpanel" aria-labelledby="t-atributos">
+    <div id="fotoNaAbaAtributos">
+    <section id="fotoBloco">
       <div class="foto">
         <div class="moldura" id="fotoBox">Sem foto</div>
         <div>
@@ -50,24 +65,11 @@
           <p class="dica" id="fotoMsg">JPG, PNG ou WEBP, até 20 MB. A foto é enviada ao salvar.</p>
         </div>
       </div>
-      <div class="g g2">
-        <div><label for="per">Personagem</label><input type="text" id="per" data-k="personagem"></div>
-        <div><label for="niv">Nível</label><input type="number" id="niv" data-k="nivel" min="1" max="10"></div>
-      </div>
-      <div style="margin-top:12px"><label for="con">Conceito / Passado</label><textarea id="con" data-k="conceito" rows="3"></textarea></div>
     </section>
 
+    </div>
     <section>
-      <h2>1. Histórico e especialização geral</h2>
-      <p class="nota">Escolha 1.</p>
-      <label class="chk"><input type="checkbox" data-k="espOk"> Especialização escolhida</label>
-      <label for="esp" style="margin-top:8px">Especialização</label>
-      <input type="text" id="esp" data-k="esp">
-      <p class="dica">Efeito: +2 no resultado final do teste de 2D6 quando agir dentro do escopo do seu passado/profissão.</p>
-    </section>
-
-    <section>
-      <h2>2. Atributos base</h2>
+      <h2>Atributos base</h2>
       <p class="nota">Escala de 1 a 10. Role 2D6 + Atributo. De 7 a 9: sucesso com custo. De 10 a 14: sucesso pleno. 15 ou mais: crítico.</p>
       <div class="g g3">
         <div class="attr"><b>Intelecto</b><em>Cognição, lógica, ciência</em><input type="number" min="1" max="10" id="int" data-k="int" aria-label="Intelecto"></div>
@@ -85,7 +87,7 @@
     </section>
 
     <section>
-      <h2>3. Recursos de sobrevivência</h2>
+      <h2>Recursos de sobrevivência</h2>
       <div class="g g2">
         <div>
           <label>PV – Pontos de Vida (atual / máximo)</label>
@@ -99,8 +101,11 @@
       </div>
     </section>
 
+    </div>
+
+    <div class="painel" id="aba-inventario" role="tabpanel" aria-labelledby="t-inventario" hidden>
     <section>
-      <h2>4. Arsenal</h2>
+      <h2>Arsenal e proteção</h2>
       <p class="nota">Ataques com 2D6 + Atributo. Escolha entre as suas armas pessoais e as armas da campanha. <a href="lobby.html#armas" class="so-tela">Criar arma nova</a></p>
       <div id="armas"></div>
       <div class="linha">
@@ -114,14 +119,36 @@
     </section>
 
     <section>
-      <h2>5. Inventário e equipamentos de expedição</h2>
+      <h2>Inventário e equipamentos de expedição</h2>
       <div class="inv" id="inv"></div>
     </section>
 
+    </div>
+
+    <div class="painel" id="aba-descricao" role="tabpanel" aria-labelledby="t-descricao" hidden>
+    <div id="fotoNaAbaDescricao"></div>
     <section>
-      <h2>6. Anotações, infecções e traumas</h2>
+      <h2>História</h2>
+      <p class="nota">Conceito e passado do personagem: quem era antes da Colisão.</p>
+      <label for="con" class="so-leitor">História / Conceito / Passado</label>
+      <textarea id="con" data-k="conceito" rows="8"></textarea>
+    </section>
+
+    <section>
+      <h2>Especialização</h2>
+      <p class="nota">Escolha 1.</p>
+      <label class="chk"><input type="checkbox" data-k="espOk"> Especialização escolhida</label>
+      <label for="esp" style="margin-top:8px">Especialização</label>
+      <input type="text" id="esp" data-k="esp">
+      <p class="dica">Efeito: +2 no resultado final do teste de 2D6 quando agir dentro do escopo do seu passado/profissão.</p>
+    </section>
+
+    <section>
+      <h2>Anotações, infecções e traumas</h2>
       <textarea data-k="notas" rows="8" aria-label="Anotações, infecções e traumas"></textarea>
     </section>
+
+    </div>
 
     <div class="barra-salvar">
       <p class="msg" id="sMsg" role="status"></p>
@@ -135,7 +162,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="comum.js?v=202611151610"></script>
+<script src="comum.js?v=202611151823"></script>
 <script>
 (async function () {
   const params = new URLSearchParams(location.search);
@@ -499,6 +526,40 @@
   // ------------------------------------------------------------------
   try { await carregar(); }
   catch (e) { aviso('#geral', erroMsg(e), 'ruim'); }
+})();
+</script>
+
+<script>
+// Abas da ficha: Atributos / Inventário / Descrição. A aba fica no endereço
+// (ficha.html?id=5#inventario), então dá para abrir e compartilhar direto nela.
+(function () {
+  const nomes = ['atributos', 'inventario', 'descricao'];
+  function aba(n, mudarEndereco) {
+    if (!nomes.includes(n)) n = 'atributos';
+    nomes.forEach(x => {
+      $('#t-' + x).setAttribute('aria-selected', x === n ? 'true' : 'false');
+      $('#t-' + x).tabIndex = x === n ? 0 : -1;
+      $('#aba-' + x).hidden = x !== n;
+    });
+    // A foto aparece em Atributos e em Descrição (é o mesmo bloco, com o mesmo botão de trocar/remover)
+    const foto = $('#fotoBloco');
+    if (n === 'atributos') $('#fotoNaAbaAtributos').append(foto);
+    if (n === 'descricao') $('#fotoNaAbaDescricao').append(foto);
+    foto.hidden = (n === 'inventario');
+    if (mudarEndereco) history.replaceState(null, '', location.pathname + location.search + '#' + n);
+  }
+  nomes.forEach((x, i) => {
+    const b = $('#t-' + x);
+    b.addEventListener('click', () => aba(x, true));
+    b.addEventListener('keydown', ev => {   // setas movem entre as abas
+      const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      const p = nomes[(i + d + nomes.length) % nomes.length];
+      aba(p, true); $('#t-' + p).focus(); ev.preventDefault();
+    });
+  });
+  aba(location.hash.slice(1), false);
+  window.addEventListener('hashchange', () => aba(location.hash.slice(1), false));
 })();
 </script>
 </body>

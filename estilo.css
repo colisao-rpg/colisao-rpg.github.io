@@ -256,7 +256,14 @@ textarea{resize:vertical;min-height:90px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 
 /* ---------- impressão: fundo branco, sem botões ---------- */
+/* abas da ficha */
+.painel[hidden]{display:none}
+.so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ficha .abas{margin:8px 0 18px;position:sticky;top:0;z-index:5;background:var(--abismo)}
 @media print{
+  .abas{display:none!important}
+  .painel[hidden]{display:block!important}
+  #fotoBloco[hidden]{display:block!important}
   body{background:#fff;color:#000}
   body::before{display:none}
   .topo,.barra-salvar,.foto .acoes,.situacao .btn,.so-tela{display:none!important}
