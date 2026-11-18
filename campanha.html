@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Campanha — Colisão RPG</title>
+<title>Campanha — COLISÃO RPG</title>
 <link rel="icon" href="icone-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="icone-48.png" type="image/png" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#020107">
-<link rel="stylesheet" href="estilo.css?v=202611152025">
+<link rel="stylesheet" href="estilo.css?v=202611180030">
 </head>
 <body>
 <!-- =====================================================================
@@ -20,7 +20,7 @@
      As regras de quem pode ver e mexer continuam no banco (RLS).
      ===================================================================== -->
 <header class="topo">
-  <a class="marca" href="lobby.html">Colisão RPG</a>
+  <a class="marca" href="lobby.html">COLISÃO RPG</a>
   <div class="quem"><span id="quem"></span><button type="button" class="btn vazado pequeno" id="sair">Sair</button></div>
 </header>
 
@@ -31,7 +31,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="comum.js?v=202611152025"></script>
+<script src="comum.js?v=202611180030"></script>
 <script>
 (async function () {
   const ctx = await exigirLogin('#geral');
@@ -57,7 +57,7 @@
     if (j.error) throw j.error;
     const nomes = new Map(j.data.map(x => [x.id, x.nome]));
     desenhar(camp, idsJogadores, nomes, await personagens(camp, nomes));
-    document.title = camp.nome + ' — Colisão RPG';
+    document.title = camp.nome + ' — COLISÃO RPG';
   }
 
   // mestre: todas as fichas. Jogador: as próprias e só o nome das dos colegas.

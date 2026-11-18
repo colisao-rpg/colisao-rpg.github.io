@@ -1,6 +1,6 @@
 {
-  "name": "Colisão RPG",
-  "short_name": "Colisão RPG",
+  "name": "COLISÃO RPG",
+  "short_name": "COLISÃO RPG",
   "description": "Fichas, campanhas e armas do Colisão RPG.",
   "start_url": "./lobby.html",
   "scope": "./",

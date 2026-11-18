@@ -9,7 +9,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#020107">
-<link rel="stylesheet" href="estilo.css?v=202611152025">
+<link rel="stylesheet" href="estilo.css?v=202611180030">
 </head>
 <body>
 <!-- =====================================================================
@@ -19,7 +19,7 @@
        ficha.html?novo=1&campanha=2    personagem novo já na campanha 2
      ===================================================================== -->
 <header class="topo">
-  <a class="marca" href="lobby.html">Colisão RPG</a>
+  <a class="marca" href="lobby.html">COLISÃO RPG</a>
   <div class="quem"><a class="btn vazado pequeno" href="lobby.html">Voltar ao lobby</a><span id="quem"></span><button type="button" class="btn vazado pequeno" id="sair">Sair</button></div>
 </header>
 
@@ -162,7 +162,7 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="comum.js?v=202611152025"></script>
+<script src="comum.js?v=202611180030"></script>
 <script>
 (async function () {
   const params = new URLSearchParams(location.search);
@@ -392,13 +392,13 @@
       w.data.forEach(x => { S[x.slot + 'Id'] = String(x.arma_id); });
       i.data.forEach(x => { S['i' + x.posicao] = x.item; S['i' + x.posicao + 'c'] = !!x.marcado; });
       $('#bExcluir').hidden = false;
-      document.title = d.nome + ' — Colisão RPG';
+      document.title = d.nome + ' — COLISÃO RPG';
     } else {
       dono = EU;
       const pedida = params.get('campanha') ? +params.get('campanha') : null;
       campanhaId = pedida && joga.has(pedida) ? pedida : null;
       S = { nivel: 1, int: 1, vig: 1, mot: 1, hum: 100, fric: 0, rd: 0, trajeRd: 0, pv: 14 };
-      document.title = 'Novo personagem — Colisão RPG';
+      document.title = 'Novo personagem — COLISÃO RPG';
     }
     mostrarSituacao(campanhas);
     aplicarEstado();
@@ -494,7 +494,7 @@
         const c = await sb.from('campanhas').select('id,nome,mestre_id');
         mostrarSituacao((c.data || []).map(x => Object.assign(x, { souJogador: true })));
       }
-      document.title = linha.nome + ' — Colisão RPG';
+      document.title = linha.nome + ' — COLISÃO RPG';
       aviso('#sMsg', 'Ficha de ' + linha.nome + ' salva.', 'bom');
     } catch (e) {
       if (subiu && !gravou) { try { await sb.storage.from(BUCKET).remove([subiu]); } catch (x) {} }
